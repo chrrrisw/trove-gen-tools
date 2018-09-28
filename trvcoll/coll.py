@@ -60,4 +60,6 @@ def collect_articles(apikey, filename, db, year_start, year_end):
                         for a in articles:
                             db.add_article(a)
 
+        db.commit()
+
     db.commit()

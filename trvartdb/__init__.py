@@ -72,7 +72,6 @@ class ArticleDB(object):
             article = Article(
                 article_id=json_article["id"],
                 title_id=json_article["title"]["id"],
-                # title=json_article["title"]["value"],
                 page=json_article["page"],
                 assessed=False,
                 relevant=False,
