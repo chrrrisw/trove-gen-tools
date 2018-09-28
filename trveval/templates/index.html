@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Article Pager</title>
+	<link rel="stylesheet" type="text/css" href="static/index.css">
+	<script type="text/javascript" src="static/index.js"></script>
+</head>
+<body>
+	<div id="content">
+		<form id="relevance" action="" method="post">
+			<label for="relevant">{{article_id}}</label>
+			<input type="submit" id="relevant" name="relevant" value="Relevant" />
+			<input type="submit" name="relevant" value="Not Relevant" />
+			<input type="submit" name="relevant" value="Skip" />
+		</form>
+		<iframe id="trove" src="https://trove.nla.gov.au/newspaper/article/{{ article_id }}?searchTerm={{ search_terms }}"></iframe>
+	</div>
+
+</body>
+</html>
