@@ -1,8 +1,8 @@
 import os
 
-from sqlalchemy import Column, Integer, String, Boolean  # ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean  #, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker  # relationship
+from sqlalchemy.orm import sessionmaker  #, relationship
 from sqlalchemy import create_engine
 
 Base = declarative_base()
@@ -91,7 +91,8 @@ class ArticleDB(object):
                 print(json_article["title"]["id"], "is new title")
                 title = NewspaperTitle(
                     title_id=json_article["title"]["id"],
-                    title=json_article["title"]["value"])
+                    title=json_article["title"]["value"],
+                )
                 self._session.add(title)
 
     def commit(self):

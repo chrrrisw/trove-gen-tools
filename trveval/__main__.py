@@ -1,12 +1,38 @@
 import argparse
+from functools import partial
 import os
-from aiohttp import web
+import weakref
+
+from aiohttp import web, WSMsgType, WSCloseCode
 from jinja2 import Environment, PackageLoader, select_autoescape
 
 from trvartdb import Article, ArticleDB
 
 
-async def handle_post(request):
+async def websocket_handler(request):
+
+    ws = web.WebSocketResponse()
+    await ws.prepare(request)
+
+    request.app["websockets"].add(ws)
+    try:
+        async for msg in ws:
+            if msg.type == WSMsgType.TEXT:
+                if msg.data == "close":
+                    await ws.close()
+                else:
+                    await ws.send_str(msg.data + "/answer")
+            elif msg.type == WSMsgType.ERROR:
+                print("ws connection closed with exception %s" % ws.exception())
+    finally:
+        request.app["websockets"].discard(ws)
+
+    print("websocket connection closed")
+
+    return ws
+
+
+async def handle_post(search_terms, request):
     print(request.url)
 
     data = await request.post()
@@ -34,23 +60,23 @@ async def handle_post(request):
 
     print("POST Showing", request.app["current_article"].article_id)
     return web.Response(
-        body=request.app["template"].render(
+        body=request.app["index_template"].render(
             article_id=request.app["current_article"].article_id,
-            search_terms="",
+            search_terms=search_terms,
         ),
         content_type="text/html",
     )
 
 
-async def handle_get(request):
+async def handle_get(search_terms, request):
     if request.app["current_article"] is None:
         return web.Response(text="Finished!")
     else:
         print("GET Showing", request.url, request.app["current_article"].article_id)
         return web.Response(
-            body=request.app["template"].render(
+            body=request.app["index_template"].render(
                 article_id=request.app["current_article"].article_id,
-                search_terms="",
+                search_terms=search_terms,
             ),
             content_type="text/html",
         )
@@ -58,6 +84,16 @@ async def handle_get(request):
     # name = request.match_info.get("name", "Anonymous")
     # text = "Hello, " + name
     # return web.Response(text=text)
+
+
+async def handle_db(request):
+    all_articles = request.app["database"].session.query(Article)
+    return web.Response(
+        body=request.app["db_template"].render(
+            db_title=request.app["dbname"], articles=all_articles
+        ),
+        content_type="text/html",
+    )
 
 
 async def on_startup(app):
@@ -75,7 +111,8 @@ async def on_startup(app):
         loader=PackageLoader("trveval", "templates"),
         autoescape=select_autoescape(["html"]),
     )
-    app["template"] = env.get_template("index.html")
+    app["index_template"] = env.get_template("index.html")
+    app["db_template"] = env.get_template("db.html")
 
 
 async def on_cleanup(app):
@@ -85,9 +122,8 @@ async def on_cleanup(app):
 
 async def on_shutdown(app):
     print("Shutdown called")
-    # for ws in set(app['websockets']):
-    #     await ws.close(code=WSCloseCode.GOING_AWAY,
-    #                    message='Server shutdown')
+    for ws in set(app["websockets"]):
+        await ws.close(code=WSCloseCode.GOING_AWAY, message="Server shutdown")
 
 
 DEFAULT_HOST = "127.0.0.1"
@@ -100,6 +136,12 @@ def main():
         description="Evaluate articles for relevance, updating the database as you go.",
     )
     parser.add_argument(dest="database", help="The database to use.")
+    parser.add_argument(
+        "-s",
+        "--search_terms",
+        dest="search_terms",
+        help="The file containing search terms.",
+    )
     parser.add_argument(
         "-H",
         "--host",
@@ -116,7 +158,23 @@ def main():
     )
     args = parser.parse_args()
 
+    if args.search_terms is None:
+        print("No search terms")
+        search_terms = ""
+    else:
+        if os.path.exists(args.search_terms):
+            # TODO: parse file and format
+            with open(args.search_terms, "r") as f:
+                search_terms = f.read()
+        else:
+            # TODO: Hopefully a string of plus separated terms
+            search_terms = args.search_terms
+
+    getcb = partial(handle_get, search_terms)
+    postcb = partial(handle_post, search_terms)
+
     app = web.Application()
+    app["websockets"] = weakref.WeakSet()
     app["dbname"] = args.database
     # runner = web.AppRunner(app)
     # await runner.setup()
@@ -126,8 +184,10 @@ def main():
     app.on_shutdown.append(on_shutdown)
 
     # app.add_routes([web.get("/", handle), web.get("/{name}", handle)])
-    app.router.add_route("GET", "/", handle_get)
-    app.router.add_route("POST", "/", handle_post)
+    app.router.add_route("GET", "/ws", websocket_handler)
+    app.router.add_route("GET", "/", getcb)
+    app.router.add_route("GET", "/db.html", handle_db)
+    app.router.add_route("POST", "/", postcb)
     static_path = os.path.join(os.path.dirname(__file__), "static")
     app.router.add_static("/static", static_path)
 
