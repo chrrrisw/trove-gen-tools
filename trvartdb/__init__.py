@@ -1,8 +1,8 @@
 import os
 
-from sqlalchemy import Column, Integer, String, Boolean  #, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean  # , ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker  #, relationship
+from sqlalchemy.orm import sessionmaker  # , relationship
 from sqlalchemy import create_engine
 
 Base = declarative_base()
