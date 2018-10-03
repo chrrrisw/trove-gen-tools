@@ -74,7 +74,7 @@ async def handle_post(search_terms, request):
 
     print("POST now showing", request.app["current_article"].id)
     return web.Response(
-        body=request.app["index_template"].render(
+        body=request.app["assessment_template"].render(
             article_id=request.app["current_article"].id,
             people=request.app["database"].all_people(),
             search_terms=search_terms,
@@ -89,7 +89,7 @@ async def handle_get(search_terms, request):
     else:
         print("GET Showing", request.url, request.app["current_article"].id)
         return web.Response(
-            body=request.app["index_template"].render(
+            body=request.app["assessment_template"].render(
                 article_id=request.app["current_article"].id,
                 people=request.app["database"].all_people(),
                 search_terms=search_terms,
@@ -102,10 +102,10 @@ async def handle_get(search_terms, request):
     # return web.Response(text=text)
 
 
-async def handle_db(request):
+async def handle_articles(request):
     all_articles = request.app["database"].session.query(Article)
     return web.Response(
-        body=request.app["db_template"].render(
+        body=request.app["articles_template"].render(
             db_title=request.app["dbname"], articles=all_articles
         ),
         content_type="text/html",
@@ -127,8 +127,8 @@ async def on_startup(app):
         loader=PackageLoader("trveval", "templates"),
         autoescape=select_autoescape(["html"]),
     )
-    app["index_template"] = env.get_template("index.html")
-    app["db_template"] = env.get_template("db.html")
+    app["assessment_template"] = env.get_template("assessment.html")
+    app["articles_template"] = env.get_template("articles.html")
 
 
 async def on_cleanup(app):
@@ -202,7 +202,7 @@ def main():
     # app.add_routes([web.get("/", handle), web.get("/{name}", handle)])
     app.router.add_route("GET", "/ws", websocket_handler)
     app.router.add_route("GET", "/", getcb)
-    app.router.add_route("GET", "/db.html", handle_db)
+    app.router.add_route("GET", "/articles.html", handle_articles)
     app.router.add_route("POST", "/", postcb)
     static_path = os.path.join(os.path.dirname(__file__), "static")
     app.router.add_static("/static", static_path)
