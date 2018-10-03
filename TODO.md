@@ -1,5 +1,4 @@
-TODO
-====
+# TODO
 
 - [ ] Packaging (including console scripts)
 - [ ] CSV import/export
@@ -12,7 +11,7 @@ TODO
 - [x] Catch form re-submission
 - [ ] Add name list and search terms to DB
 - [x] Link people table to articles
-- [ ] Add people to articles
+- [x] Add people to articles
 - [ ] Web interface for DB modification
 - [ ] DB migration scripts
 - [ ] stop people enter from submitting form
