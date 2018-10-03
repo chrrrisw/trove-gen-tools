@@ -4,15 +4,59 @@
 	<title>Article Pager</title>
 	<link rel="stylesheet" type="text/css" href="static/index.css">
 	<script type="text/javascript" src="static/index.js"></script>
+	<link
+		rel="stylesheet"
+		href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.0/dist/semantic.min.css"
+		integrity="sha256-9mbkOfVho3ZPXfM7W8sV2SndrGDuh7wuyLjtsWeTI1Q="
+		crossorigin="anonymous">
+	<script
+		src="https://code.jquery.com/jquery-3.1.1.min.js"
+		integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+		crossorigin="anonymous"></script>
+	<script
+		src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.0/dist/semantic.min.js"
+		integrity="sha256-x1fC6BXl6BwnUhfQqqqC0Fd/n12wH+u8u9va6+E7xaA="
+		crossorigin="anonymous"></script>
 </head>
 <body>
 	<div id="content">
-		<form id="relevance" action="" method="post">
-			<input type="submit" id="relevant" name="relevant" value="Relevant" />
-			<input type="submit" name="relevant" value="Not Relevant" />
-			<input type="submit" name="relevant" value="Skip" />
-			<span>{{ article_id }}</span>
-			<a href="db.html">DB</a>
+		<form id="relevance" class="ui container" action="" method="post">
+
+			<input class="ui button" type="submit" name="relevant" value="Skip" />
+			<input class="positive ui button" type="submit" name="relevant" value="Relevant" />
+			<input class="negative ui button" type="submit" name="relevant" value="Not Relevant" />
+			<div class="ui disabled input"><input type="text" name="article_id" value="{{ article_id }}"/></div>
+
+			<div class="ui multiple person search selection dropdown">
+				<input type="hidden" name="people">
+				<i class="dropdown icon"></i>
+				<div class="default text">People</div>
+				<div class="menu">
+				{% for person in people %}
+					<div class="item" data-value="{{ person.name }}">{{ person.name }}</div>
+				{% endfor %}
+				</div>
+			</div>
+
+			<a
+				class="ui right floated icon button"
+				href="db.html"
+				data-tooltip="Manage articles"
+				data-delay="500"
+				data-position="bottom center"><i class="newspaper outline icon"></i></a>
+			<a
+				class="ui right floated icon button"
+				href="people.html"
+				data-tooltip="Manage people"
+				data-delay="500"
+				data-position="bottom center"><i class="address book outline icon"></i></a>
+			<a
+				class="ui right floated icon button"
+				href="index.html"
+				data-tooltip="Article assessment"
+				data-delay="500"
+				data-position="bottom center"><i class="check square outline icon"></i></a>
+
 		</form>
 		<iframe id="trove" src="https://trove.nla.gov.au/newspaper/article/{{ article_id }}?searchTerm={{ search_terms }}"></iframe>
 	</div>

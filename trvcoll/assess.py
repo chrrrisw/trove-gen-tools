@@ -16,15 +16,15 @@ def assess_articles(db, year, article_id):
     session = db.session
 
     if article_id is not None:
-        articles = session.query(Article).filter_by(article_id=article_id)
+        articles = session.query(Article).filter_by(id=article_id)
     else:
         articles = session.query(Article).filter_by(assessed=False)
         if year is not None:
             articles = articles.filter(Article.date.like(f"{year}%"))
 
     for article in articles:
-        print(article.article_id)
-        show_article(article.article_id)
+        print(article.id)
+        show_article(article.id)
         relevant = input("Relevant (y/n/q/u)")
         if relevant == "y":
             article.assessed = True

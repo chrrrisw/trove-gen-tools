@@ -1,33 +1,48 @@
 import os
 
-from sqlalchemy import Column, Integer, String, Boolean  # , ForeignKey
+from sqlalchemy import Table, Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker  # , relationship
+from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy import create_engine
 
 Base = declarative_base()
 
 
 class NewspaperTitle(Base):
-    __tablename__ = "titles"
+    """The table to hold Newspaper Titles"""
+
+    __tablename__ = "title"
     id = Column(Integer, primary_key=True)
-    title_id = Column(Integer)
     title = Column(String)
+    articles = relationship("Article")  # One to many, title is parent
+
+
+article_person = Table(
+    "article_person",
+    Base.metadata,
+    Column("article_id", Integer, ForeignKey("article.id")),
+    Column("person_id", Integer, ForeignKey("person.id")),
+)
 
 
 class Person(Base):
-    __tablename__ = "persons"
+    __tablename__ = "person"
     id = Column(Integer, primary_key=True)
+    articles = relationship(
+        "Article", secondary=article_person, back_populates="people"
+    )
     name = Column(String)
     date_of_birth = Column(String)
     date_of_death = Column(String)
 
 
 class Article(Base):
-    __tablename__ = "articles"
+    __tablename__ = "article"
     id = Column(Integer, primary_key=True)
-    article_id = Column(Integer)
-    title_id = Column(Integer)
+    title_id = Column(Integer, ForeignKey("title.id"))
+    people = relationship(
+        "Person", secondary=article_person, back_populates="articles"
+    )
     page = Column(Integer)
     assessed = Column(Boolean)
     relevant = Column(Boolean)
@@ -61,16 +76,30 @@ class ArticleDB(object):
         self._session = DBSession()
 
     def add_article(self, json_article):
-        # Check we don't have it already
-        query = (
-            self._session.query(Article)
-            .filter(Article.article_id == json_article["id"])
+
+        # Check for the newspaper title, only add if missing
+        title_query = (
+            self._session.query(NewspaperTitle)
+            .filter(NewspaperTitle.id == json_article["title"]["id"])
             .one_or_none()
         )
-        if query is None:
+        if title_query is None:
+            print(json_article["title"]["id"], "is new title")
+            title = NewspaperTitle(
+                id=json_article["title"]["id"], title=json_article["title"]["value"]
+            )
+            self._session.add(title)
+
+        # Check for the article, only add if missing
+        article_query = (
+            self._session.query(Article)
+            .filter(Article.id == json_article["id"])
+            .one_or_none()
+        )
+        if article_query is None:
             print(json_article["id"], "is new article")
             article = Article(
-                article_id=json_article["id"],
+                id=json_article["id"],
                 title_id=json_article["title"]["id"],
                 page=json_article["page"],
                 assessed=False,
@@ -81,19 +110,21 @@ class ArticleDB(object):
             )
             self._session.add(article)
 
-            title_query = (
-                self._session.query(NewspaperTitle)
-                .filter(NewspaperTitle.title_id == json_article["title"]["id"])
-                .one_or_none()
-            )
+    def add_person(self, name, article=None):
+        name_query = (
+            self._session.query(Person).filter(Person.name == name).one_or_none()
+        )
+        if name_query is None:
+            person = Person(name=name)
+            self._session.add(person)
+            if article is not None:
+                article.people.append(person)
+        else:
+            if article is not None:
+                article.people.append(name_query)
 
-            if title_query is None:
-                print(json_article["title"]["id"], "is new title")
-                title = NewspaperTitle(
-                    title_id=json_article["title"]["id"],
-                    title=json_article["title"]["value"],
-                )
-                self._session.add(title)
+    def all_people(self):
+        return self._session.query(Person)
 
     def commit(self):
         self._session.commit()

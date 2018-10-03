@@ -9,10 +9,15 @@ ENCODING = "json"
 
 
 def query_trove(payload):
-    response = requests.get(BASE_URL, params=payload)
-    json_response = json.loads(response.text)
-    records = json_response["response"]["zone"][0]["records"]
-    return records
+    try:
+        response = requests.get(BASE_URL, params=payload)
+    except requests.exceptions.ProxyError as err:
+        print(err)
+        return {}
+    else:
+        json_response = json.loads(response.text)
+        records = json_response["response"]["zone"][0]["records"]
+        return records
 
 
 def collect_articles(apikey, filename, db, year_start, year_end):

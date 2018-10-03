@@ -9,7 +9,12 @@ TODO
 - [ ] Re-evaluation (undo)
 - [ ] Allow specification of search terms
 - [ ] Multiple connections (aiosqlite, sqlalchemy_aio)
-- [ ] Catch form re-submission
+- [x] Catch form re-submission
 - [ ] Add name list and search terms to DB
-- [ ] Link people table to articles
+- [x] Link people table to articles
+- [ ] Add people to articles
 - [ ] Web interface for DB modification
+- [ ] DB migration scripts
+- [ ] stop people enter from submitting form
+- [ ] Web interface for managing people
+- [ ] Tidy article_id in form (e.g. hidden)

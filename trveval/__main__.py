@@ -6,7 +6,7 @@ import weakref
 from aiohttp import web, WSMsgType, WSCloseCode
 from jinja2 import Environment, PackageLoader, select_autoescape
 
-from trvartdb import Article, ArticleDB
+from trvartdb import Article, ArticleDB, Person
 
 
 async def websocket_handler(request):
@@ -33,35 +33,50 @@ async def websocket_handler(request):
 
 
 async def handle_post(search_terms, request):
-    print(request.url)
 
     data = await request.post()
+
+    print(data)
     relevance = data["relevant"]
+    article_id = int(data["article_id"])
+    people = data["people"].split(",")
 
-    if relevance == "Relevant":
-        print("\tRelevant", request.app["current_article"].article_id)
-        request.app["current_article"].assessed = True
-        request.app["current_article"].relevant = True
-    elif relevance == "Not Relevant":
-        print("\tNot Relevant", request.app["current_article"].article_id)
-        request.app["current_article"].assessed = True
-        request.app["current_article"].relevant = False
-    elif relevance == "Skip":
-        print("\tSkip", request.app["current_article"].article_id)
-    else:
-        raise NotImplementedError(relevance)
+    reposted = False
+    if article_id != request.app["current_article"].id:
+        print(type(article_id), type(request.app["current_article"].id))
+        print("######### REPOSTED")
+        reposted = True
 
-    request.app["database"].commit()
+    if not reposted:
+        print("POST", request.app["current_article"].id, relevance, people)
 
-    try:
-        request.app["current_article"] = request.app["iterator"].__next__()
-    except StopIteration as e:
-        return web.Response(text="Finished!")
+        for person in people:
+            if person != "":
+                request.app["database"].add_person(person, request.app["current_article"])
 
-    print("POST Showing", request.app["current_article"].article_id)
+        if relevance == "Relevant":
+            request.app["current_article"].assessed = True
+            request.app["current_article"].relevant = True
+        elif relevance == "Not Relevant":
+            request.app["current_article"].assessed = True
+            request.app["current_article"].relevant = False
+        elif relevance == "Skip":
+            pass
+        else:
+            raise NotImplementedError(relevance)
+
+        request.app["database"].commit()
+
+        try:
+            request.app["current_article"] = request.app["iterator"].__next__()
+        except StopIteration as e:
+            return web.Response(text="Finished!")
+
+    print("POST now showing", request.app["current_article"].id)
     return web.Response(
         body=request.app["index_template"].render(
-            article_id=request.app["current_article"].article_id,
+            article_id=request.app["current_article"].id,
+            people=request.app["database"].all_people(),
             search_terms=search_terms,
         ),
         content_type="text/html",
@@ -72,10 +87,11 @@ async def handle_get(search_terms, request):
     if request.app["current_article"] is None:
         return web.Response(text="Finished!")
     else:
-        print("GET Showing", request.url, request.app["current_article"].article_id)
+        print("GET Showing", request.url, request.app["current_article"].id)
         return web.Response(
             body=request.app["index_template"].render(
-                article_id=request.app["current_article"].article_id,
+                article_id=request.app["current_article"].id,
+                people=request.app["database"].all_people(),
                 search_terms=search_terms,
             ),
             content_type="text/html",
