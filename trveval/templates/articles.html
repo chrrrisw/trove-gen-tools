@@ -1,11 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>{{ db_title }}</title>
+	<title>Articles in {{ db_title }}</title>
 	<link rel="stylesheet" type="text/css" href="static/articles.css">
 	<script type="text/javascript" src="static/articles.js"></script>
+	<link
+		rel="stylesheet"
+		href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.0/dist/semantic.min.css"
+		integrity="sha256-9mbkOfVho3ZPXfM7W8sV2SndrGDuh7wuyLjtsWeTI1Q="
+		crossorigin="anonymous">
+	<script
+		src="https://code.jquery.com/jquery-3.1.1.min.js"
+		integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+		crossorigin="anonymous"></script>
+	<script
+		src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.0/dist/semantic.min.js"
+		integrity="sha256-x1fC6BXl6BwnUhfQqqqC0Fd/n12wH+u8u9va6+E7xaA="
+		crossorigin="anonymous"></script>
 </head>
 <body>
+	<div class="ui fixed menu">
+		<div class="ui container">
+			<div class="header item">Articles in {{ db_title }}</div>
+			<div class="right icon menu">
+				<a class="item" href="/"><i class="check square outline icon"></i>Assessment</a>
+				<div class="disabled item" href="articles.html"><i class="newspaper outline icon"></i>Articles</div>
+				<a class="item" href="people.html"><i class="address book outline icon"></i>People</a>
+			</div>
+		</div>
+	</div>
+
 	<table>
 		<thead>
 			<tr>

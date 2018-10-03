@@ -40,22 +40,22 @@
 
 			<a
 				class="ui right floated icon button"
-				href="articles.html"
-				data-tooltip="Manage articles"
-				data-delay="500"
-				data-position="bottom center"><i class="newspaper outline icon"></i></a>
-			<a
-				class="ui right floated icon button"
 				href="people.html"
 				data-tooltip="Manage people"
 				data-delay="500"
 				data-position="bottom center"><i class="address book outline icon"></i></a>
 			<a
 				class="ui right floated icon button"
-				href="assessment.html"
+				href="articles.html"
+				data-tooltip="Manage articles"
+				data-delay="500"
+				data-position="bottom center"><i class="newspaper outline icon"></i></a>
+			<div
+				class="ui right floated disabled icon button"
+				href="/"
 				data-tooltip="Article assessment"
 				data-delay="500"
-				data-position="bottom center"><i class="check square outline icon"></i></a>
+				data-position="bottom center"><i class="check square outline icon"></i></div>
 
 		</form>
 		<iframe id="trove" src="https://trove.nla.gov.au/newspaper/article/{{ article_id }}?searchTerm={{ search_terms }}"></iframe>

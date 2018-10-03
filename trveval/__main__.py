@@ -112,6 +112,17 @@ async def handle_articles(request):
     )
 
 
+async def handle_people(request):
+    """Show the page that manages the people in the database."""
+    all_people = request.app["database"].all_people()
+    return web.Response(
+        body=request.app["people_template"].render(
+            db_title=request.app["dbname"], people=all_people
+        ),
+        content_type="text/html",
+    )
+
+
 async def on_startup(app):
     print("Startup called")
     app["database"] = ArticleDB(app["dbname"])
@@ -129,6 +140,7 @@ async def on_startup(app):
     )
     app["assessment_template"] = env.get_template("assessment.html")
     app["articles_template"] = env.get_template("articles.html")
+    app["people_template"] = env.get_template("people.html")
 
 
 async def on_cleanup(app):
@@ -200,13 +212,25 @@ def main():
     app.on_shutdown.append(on_shutdown)
 
     # app.add_routes([web.get("/", handle), web.get("/{name}", handle)])
+
+    # Handler for websocket connections
     app.router.add_route("GET", "/ws", websocket_handler)
+
+    # The assessment page
     app.router.add_route("GET", "/", getcb)
-    app.router.add_route("GET", "/articles.html", handle_articles)
     app.router.add_route("POST", "/", postcb)
+
+    # The articles page
+    app.router.add_route("GET", "/articles.html", handle_articles)
+
+    # The people page
+    app.router.add_route("GET", "/people.html", handle_people)
+
+    # static files
     static_path = os.path.join(os.path.dirname(__file__), "static")
     app.router.add_static("/static", static_path)
 
+    # run the server
     web.run_app(app, host=args.host, port=args.port)
 
 
