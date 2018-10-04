@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+	<meta charset="UTF-8">
 	<title>People in {{ db_title }}</title>
 	<link rel="stylesheet" type="text/css" href="static/people.css">
 	<script type="text/javascript" src="static/people.js"></script>
@@ -31,8 +32,29 @@
 		</div>
 	</div>
 
-	<div class="ui container">
+	{# https://codepen.io/ashblue/pen/mCtuA #}
+	<div class="ui main container">
+		<table class="ui selectable celled compact table">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Name</th>
+					<th>DOB</th>
+					<th>DOD</th>
+				</tr>
+			</thead>
+			<tbody>
 
+			</tbody>
+			{% for person in people %}
+				<tr id="{{ person.id }}">
+					<td>{{ person.id }}</td>
+					<td>{{ person.name }}</td>
+					<td contenteditable="true">{{ person.date_of_birth }}</td>
+					<td contenteditable="true">{{ person.date_of_death }}</td>
+				</tr>
+			{% endfor %}
+		</table>
 	</div>
 </body>
 </html>

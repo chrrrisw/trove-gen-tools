@@ -39,7 +39,12 @@ def collect_articles(apikey, filename, db, year_start, year_end):
             # New query, set q
             payload["q"] = l.strip()
 
-            for year in range(year_start, year_end):
+            db.add_query(payload["q"])
+
+            for year in range(year_start, year_end + 1):
+                print("Processing", payload["q"], year)
+
+                db.add_year(year)
 
                 # New year, set s, decade and year
                 payload["s"] = "*"
@@ -58,13 +63,13 @@ def collect_articles(apikey, filename, db, year_start, year_end):
                 # This could be done by recursion, but I worry about depth
                 while "nextStart" in records:
                     payload["s"] = records["nextStart"]
-                    print("nextStart", records["nextStart"])
+                    # print("nextStart", records["nextStart"])
                     records = query_trove(payload)
                     if "article" in records:
                         articles = records["article"]
                         for a in articles:
                             db.add_article(a)
 
-        db.commit()
+            db.commit()
 
     db.commit()

@@ -1,12 +1,11 @@
 import argparse
-from functools import partial
 import os
 import weakref
 
 from aiohttp import web, WSMsgType, WSCloseCode
 from jinja2 import Environment, PackageLoader, select_autoescape
 
-from trvartdb import Article, ArticleDB, Person
+from trvartdb import Article, ArticleDB, Query, Highlight, Year
 
 
 async def websocket_handler(request):
@@ -20,6 +19,12 @@ async def websocket_handler(request):
             if msg.type == WSMsgType.TEXT:
                 if msg.data == "close":
                     await ws.close()
+                elif msg.data.startswith("assessed"):
+                    _, article_id, assessment = msg.data.split()
+                    request.app["database"].set_assessed(article_id, assessment)
+                elif msg.data.startswith("relevant"):
+                    _, article_id, relevance = msg.data.split()
+                    request.app["database"].set_relevant(article_id, relevance)
                 else:
                     await ws.send_str(msg.data + "/answer")
             elif msg.type == WSMsgType.ERROR:
@@ -32,7 +37,7 @@ async def websocket_handler(request):
     return ws
 
 
-async def handle_post(search_terms, request):
+async def handle_post(request):
 
     data = await request.post()
 
@@ -52,7 +57,9 @@ async def handle_post(search_terms, request):
 
         for person in people:
             if person != "":
-                request.app["database"].add_person(person, request.app["current_article"])
+                request.app["database"].add_person(
+                    person, request.app["current_article"]
+                )
 
         if relevance == "Relevant":
             request.app["current_article"].assessed = True
@@ -77,13 +84,13 @@ async def handle_post(search_terms, request):
         body=request.app["assessment_template"].render(
             article_id=request.app["current_article"].id,
             people=request.app["database"].all_people(),
-            search_terms=search_terms,
+            highlights=request.app["database"].get_highlight_str(),
         ),
         content_type="text/html",
     )
 
 
-async def handle_get(search_terms, request):
+async def handle_get(request):
     if request.app["current_article"] is None:
         return web.Response(text="Finished!")
     else:
@@ -92,7 +99,7 @@ async def handle_get(search_terms, request):
             body=request.app["assessment_template"].render(
                 article_id=request.app["current_article"].id,
                 people=request.app["database"].all_people(),
-                search_terms=search_terms,
+                highlights=request.app["database"].get_highlight_str(),
             ),
             content_type="text/html",
         )
@@ -123,17 +130,41 @@ async def handle_people(request):
     )
 
 
+async def handle_queries(request):
+    """Show the page that manages the queries in the database."""
+    # all_people = request.app["database"].all_people()
+    return web.Response(
+        body=request.app["queries_template"].render(
+            db_title=request.app["dbname"],
+            queries=request.app["database"].session.query(Query),
+            highlights=request.app["database"].session.query(Highlight),
+            years=request.app["database"].session.query(Year)
+        ),
+        content_type="text/html",
+    )
+
+
 async def on_startup(app):
     print("Startup called")
+
+    # Create and store the database
     app["database"] = ArticleDB(app["dbname"])
+
+    # If we have highlights, add them to the database
+    app["database"].set_highlight_str(app["highlights"])
+
+    # Get all unassessed articles
     session = app["database"].session
     articles = session.query(Article).filter_by(assessed=False)
+
+    # Get an iterator for the articles and retrieve the first
     app["iterator"] = articles.__iter__()
     try:
         app["current_article"] = app["iterator"].__next__()
     except StopIteration as e:
         app["current_article"] = None
 
+    # Get and store page templates
     env = Environment(
         loader=PackageLoader("trveval", "templates"),
         autoescape=select_autoescape(["html"]),
@@ -141,6 +172,7 @@ async def on_startup(app):
     app["assessment_template"] = env.get_template("assessment.html")
     app["articles_template"] = env.get_template("articles.html")
     app["people_template"] = env.get_template("people.html")
+    app["queries_template"] = env.get_template("queries.html")
 
 
 async def on_cleanup(app):
@@ -165,10 +197,10 @@ def main():
     )
     parser.add_argument(dest="database", help="The database to use.")
     parser.add_argument(
-        "-s",
-        "--search_terms",
-        dest="search_terms",
-        help="The file containing search terms.",
+        "-l",
+        "--highlights",
+        dest="highlights",
+        help="The file containing highlights.",
     )
     parser.add_argument(
         "-H",
@@ -186,26 +218,21 @@ def main():
     )
     args = parser.parse_args()
 
-    if args.search_terms is None:
-        print("No search terms")
-        search_terms = ""
+    if args.highlights is None:
+        highlights = ""
     else:
-        if os.path.exists(args.search_terms):
+        if os.path.exists(args.highlights):
             # TODO: parse file and format
-            with open(args.search_terms, "r") as f:
-                search_terms = f.read()
+            with open(args.highlights, "r") as f:
+                highlights = f.read()
         else:
             # TODO: Hopefully a string of plus separated terms
-            search_terms = args.search_terms
-
-    getcb = partial(handle_get, search_terms)
-    postcb = partial(handle_post, search_terms)
+            highlights = args.highlights
 
     app = web.Application()
     app["websockets"] = weakref.WeakSet()
     app["dbname"] = args.database
-    # runner = web.AppRunner(app)
-    # await runner.setup()
+    app["highlights"] = highlights
 
     app.on_startup.append(on_startup)
     app.on_cleanup.append(on_cleanup)
@@ -217,14 +244,17 @@ def main():
     app.router.add_route("GET", "/ws", websocket_handler)
 
     # The assessment page
-    app.router.add_route("GET", "/", getcb)
-    app.router.add_route("POST", "/", postcb)
+    app.router.add_route("GET", "/", handle_get)
+    app.router.add_route("POST", "/", handle_post)
 
     # The articles page
     app.router.add_route("GET", "/articles.html", handle_articles)
 
     # The people page
     app.router.add_route("GET", "/people.html", handle_people)
+
+    # The people page
+    app.router.add_route("GET", "/queries.html", handle_queries)
 
     # static files
     static_path = os.path.join(os.path.dirname(__file__), "static")

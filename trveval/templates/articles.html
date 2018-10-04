@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+	<meta charset="UTF-8">
 	<title>Articles in {{ db_title }}</title>
 	<link rel="stylesheet" type="text/css" href="static/articles.css">
 	<script type="text/javascript" src="static/articles.js"></script>
@@ -30,32 +31,32 @@
 			</div>
 		</div>
 	</div>
+	<div class="ui main container">
+		<table class="ui selectable celled compact table">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Chk</th>
+					<th>Rel</th>
+					<th>Date</th>
+					<th>Category</th>
+					<th>Heading</th>
+				</tr>
+			</thead>
+			<tbody>
 
-	<table>
-		<thead>
-			<tr>
-				<th>ID</th>
-				<th>Chk</th>
-				<th>Rel</th>
-				<th>Date</th>
-				<th>Category</th>
-				<th>Heading</th>
-			</tr>
-		</thead>
-		<tbody>
-			
-		</tbody>
-		{% for article in articles %}
-			<tr>
-				<td>{{ article.article_id }}</td>
-				<td><input type="checkbox" name="assessed" {% if article.assessed %}checked{% endif %}></td>
-				<td><input type="checkbox" name="relevant" {% if article.relevant %}checked{% endif %}></td>
-				<td>{{ article.date }}</td>
-				<td>{{ article.category }}</td>
-				<td>{{ article.heading }}</td>
-			</tr>
-		{% endfor %}
-	</table>
-
+			</tbody>
+			{% for article in articles %}
+				<tr id="{{ article.id }}">
+					<td>{{ article.id }}</td>
+					<td><input type="checkbox" class="assessed" name="assessed" {% if article.assessed %}checked{% endif %}></td>
+					<td><input type="checkbox" class="relevant" name="relevant" {% if article.relevant %}checked{% endif %}></td>
+					<td>{{ article.date }}</td>
+					<td>{{ article.category }}</td>
+					<td>{{ article.heading }}</td>
+				</tr>
+			{% endfor %}
+		</table>
+	</div>
 </body>
 </html>

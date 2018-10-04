@@ -2,18 +2,45 @@
 
 - [ ] Packaging (including console scripts)
 - [ ] CSV import/export
+- [ ] Multiple connections (aiosqlite, sqlalchemy_aio)
+- [ ] DB migration scripts
+- [ ] Schema versioning
+- [ ] Merge tool for relevant articles
+- [ ] Full text retrieval
+
+## Collector
+
+- [ ] Remove assessment from collector
 - [ ] Newspaper titles (including limiting search)
 - [ ] State (including limiting search)
-- [ ] Remove assessment to another tool (web based)
-- [ ] Re-evaluation (undo)
-- [ ] Allow specification of search terms
-- [ ] Multiple connections (aiosqlite, sqlalchemy_aio)
-- [x] Catch form re-submission
-- [ ] Add name list and search terms to DB
-- [x] Link people table to articles
-- [x] Add people to articles
-- [ ] Web interface for DB modification
-- [ ] DB migration scripts
-- [ ] stop people enter from submitting form
-- [ ] Web interface for managing people
+- [ ] Use query and years tables for re-run (allow modification on cli)
+- [ ] Update article info after correction on Trove
+
+## Assessment
+
+- [x] Allow specification of highlights from file
+- [ ] Use highlights table for highlights
 - [ ] Tidy article_id in form (e.g. hidden)
+- [x] Catch form re-submission
+- [x] Add people to articles
+- [x] Link people table to articles
+- [x] Stop people enter from submitting form
+
+## Articles
+
+- [ ] Re-evaluation (undo)
+- [ ] Web interface for DB modification
+- [ ] Show/modify people
+- [ ] Notes for articles
+
+## People
+
+- [ ] Add/delete/modify people in page
+
+## Queries
+
+- [x] Add query table to DB
+- [x] Add highlights table to DB
+- [x] Add years table to DB
+- [x] Show these in page
+- [ ] Add/delete/modify these in page

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+	<meta charset="UTF-8">
 	<title>Queries in {{ db_title }}</title>
 	<link rel="stylesheet" type="text/css" href="static/queries.css">
 	<script type="text/javascript" src="static/queries.js"></script>
@@ -31,7 +32,76 @@
 		</div>
 	</div>
 
-	<div class="ui container">
+	<div class="ui main container">
+
+		<div class="ui grid">
+			<div class="three wide column">
+
+				<table class="ui selectable celled compact table" id="year_table">
+					<thead>
+						<tr>
+							<th>ID</th>
+							<th>Year</th>
+						</tr>
+					</thead>
+					<tbody>
+
+					</tbody>
+					{% for year in years %}
+						<tr id="{{ year.id }}">
+							<td>{{ year.id }}</td>
+							<td>{{ year.year }}</td>
+						</tr>
+					{% endfor %}
+				</table>
+
+			</div>
+
+			<div class="ten wide column">
+
+				<table class="ui selectable celled compact table" id="query_table">
+					<thead>
+						<tr>
+							<th>ID</th>
+							<th>Query</th>
+						</tr>
+					</thead>
+					<tbody>
+
+					</tbody>
+					{% for query in queries %}
+						<tr id="{{ query.id }}">
+							<td>{{ query.id }}</td>
+							<td>{{ query.query }}</td>
+						</tr>
+					{% endfor %}
+				</table>
+
+			</div>
+
+			<div class="three wide column">
+
+				<table class="ui selectable celled compact table" id="highlight_table">
+					<thead>
+						<tr>
+							<th>ID</th>
+							<th>Highlight</th>
+						</tr>
+					</thead>
+					<tbody>
+
+					</tbody>
+					{% for highlight in highlights %}
+						<tr id="{{ highlight.id }}">
+							<td>{{ highlight.id }}</td>
+							<td>{{ highlight.highlight }}</td>
+						</tr>
+					{% endfor %}
+				</table>
+
+			</div>
+
+		</div>
 
 	</div>
 </body>
