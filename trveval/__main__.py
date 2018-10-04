@@ -138,7 +138,7 @@ async def handle_queries(request):
             db_title=request.app["dbname"],
             queries=request.app["database"].session.query(Query),
             highlights=request.app["database"].session.query(Highlight),
-            years=request.app["database"].session.query(Year)
+            years=request.app["database"].session.query(Year),
         ),
         content_type="text/html",
     )
@@ -197,10 +197,7 @@ def main():
     )
     parser.add_argument(dest="database", help="The database to use.")
     parser.add_argument(
-        "-l",
-        "--highlights",
-        dest="highlights",
-        help="The file containing highlights.",
+        "-l", "--highlights", dest="highlights", help="The file containing highlights."
     )
     parser.add_argument(
         "-H",

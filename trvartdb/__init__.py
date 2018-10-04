@@ -188,7 +188,7 @@ class ArticleDB(object):
             self._session.add(Query(query=query))
 
     def all_queries(self):
-        return self._session.query(Query)
+        return [q.query for q in self._session.query(Query)]
 
     def add_highlight(self, highlight):
         """
@@ -223,3 +223,6 @@ class ArticleDB(object):
         year_query = self._session.query(Year).filter(Year.year == year).one_or_none()
         if year_query is None:
             self._session.add(Year(year=year))
+
+    def all_years(self):
+        return [y.year for y in self._session.query(Year)]

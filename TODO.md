@@ -13,7 +13,7 @@
 - [x] Remove assessment from collector
 - [ ] Newspaper titles (including limiting search)
 - [ ] State (including limiting search)
-- [ ] Use query and years tables for re-run (allow modification on cli)
+- [x] Use query and years tables for re-run (allow modification on cli)
 - [ ] Update article info after correction on Trove
 
 ## Assessment

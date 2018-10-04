@@ -40,14 +40,20 @@ def collect_articles(apikey, db, queries, year_start, year_end):
                 db.add_query(l.strip())
         db.commit()
 
+    # add all the years to the database
+    if year_start is not None and year_end is not None:
+        for year in range(year_start, year_end + 1):
+            db.add_year(year)
+        db.commit()
+
     for query in db.all_queries():
 
         # New query, set q
-        payload["q"] = query.query
+        payload["q"] = query
 
         db.add_query(payload["q"])
 
-        for year in range(year_start, year_end + 1):
+        for year in db.all_years():
             print("Processing", payload["q"], year)
 
             db.add_year(year)
