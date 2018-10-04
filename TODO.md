@@ -10,7 +10,7 @@
 
 ## Collector
 
-- [ ] Remove assessment from collector
+- [x] Remove assessment from collector
 - [ ] Newspaper titles (including limiting search)
 - [ ] State (including limiting search)
 - [ ] Use query and years tables for re-run (allow modification on cli)

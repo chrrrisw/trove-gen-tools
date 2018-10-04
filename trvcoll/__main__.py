@@ -3,7 +3,6 @@ import argparse
 from trvartdb import ArticleDB
 
 from .coll import collect_articles
-from .assess import assess_articles
 
 YEAR_START = 1820
 YEAR_END = 1825
