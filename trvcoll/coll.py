@@ -20,7 +20,7 @@ def query_trove(payload):
         return records
 
 
-def collect_articles(apikey, filename, db, year_start, year_end):
+def collect_articles(apikey, db, queries, year_start, year_end):
     payload = {
         "key": apikey,
         "bulkHarvest": BULK_HARVEST,
@@ -33,43 +33,49 @@ def collect_articles(apikey, filename, db, year_start, year_end):
         "l-year": 0,
     }
 
-    with open(filename, "r") as f:
-        for l in f:
+    # Add all the queries to the database
+    if queries is not None:
+        with open(queries, "r") as f:
+            for l in f:
+                db.add_query(l.strip())
+        db.commit()
 
-            # New query, set q
-            payload["q"] = l.strip()
+    for query in db.all_queries():
 
-            db.add_query(payload["q"])
+        # New query, set q
+        payload["q"] = query.query
 
-            for year in range(year_start, year_end + 1):
-                print("Processing", payload["q"], year)
+        db.add_query(payload["q"])
 
-                db.add_year(year)
+        for year in range(year_start, year_end + 1):
+            print("Processing", payload["q"], year)
 
-                # New year, set s, decade and year
-                payload["s"] = "*"
-                decade = year // 10
-                payload["l-decade"] = decade
-                payload["l-year"] = year
+            db.add_year(year)
 
+            # New year, set s, decade and year
+            payload["s"] = "*"
+            decade = year // 10
+            payload["l-decade"] = decade
+            payload["l-year"] = year
+
+            records = query_trove(payload)
+
+            if "article" in records:
+                articles = records["article"]
+                for a in articles:
+                    # print(a["title"]["id"])
+                    db.add_article(a)
+
+            # This could be done by recursion, but I worry about depth
+            while "nextStart" in records:
+                payload["s"] = records["nextStart"]
+                # print("nextStart", records["nextStart"])
                 records = query_trove(payload)
-
                 if "article" in records:
                     articles = records["article"]
                     for a in articles:
-                        # print(a["title"]["id"])
                         db.add_article(a)
 
-                # This could be done by recursion, but I worry about depth
-                while "nextStart" in records:
-                    payload["s"] = records["nextStart"]
-                    # print("nextStart", records["nextStart"])
-                    records = query_trove(payload)
-                    if "article" in records:
-                        articles = records["article"]
-                        for a in articles:
-                            db.add_article(a)
-
-            db.commit()
+        db.commit()
 
     db.commit()

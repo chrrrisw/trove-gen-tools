@@ -13,24 +13,27 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(dest="apikey", help="Your Trove API key.")
     parser.add_argument(
-        dest="filename",
-        help="The file that contains the search strings (one per line).",
-    )
-    parser.add_argument(
         dest="database", help="The database in which to store the results."
     )
     parser.add_argument(
-        "-a",
-        "--assess",
-        action="store_true",
-        dest="assess",
-        help="assess articles in browser",
+        "-q",
+        "--queries",
+        dest="queries",
+        help="A file that contains queries (one per line).",
     )
     parser.add_argument(
-        "-y", "--year", dest="year", help="limit assessment to this year"
+        "-s",
+        "--state",
+        dest="state",
+        type=str,
+        help="limit search to state",
     )
     parser.add_argument(
-        "-n", "--article", dest="article", help="limit assessment to this article"
+        "-t",
+        "--title",
+        dest="title",
+        type=str,
+        help="limit search to newspaper title",
     )
     parser.add_argument(
         "--start",
@@ -51,16 +54,13 @@ def main():
 
     adb = ArticleDB(args.database)
 
-    if args.assess:
-        assess_articles(db=adb, year=args.year, article_id=args.article)
-    else:
-        collect_articles(
-            apikey=args.apikey,
-            filename=args.filename,
-            db=adb,
-            year_start=args.year_start,
-            year_end=args.year_end,
-        )
+    collect_articles(
+        apikey=args.apikey,
+        db=adb,
+        queries=args.queries,
+        year_start=args.year_start,
+        year_end=args.year_end,
+    )
 
 
 if __name__ == "__main__":

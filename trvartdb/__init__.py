@@ -187,6 +187,9 @@ class ArticleDB(object):
         if query_query is None:
             self._session.add(Query(query=query))
 
+    def all_queries(self):
+        return self._session.query(Query)
+
     def add_highlight(self, highlight):
         """
         Add a highlight to the database.
