@@ -48,6 +48,8 @@ def main():
         queries=args.queries,
         year_start=args.year_start,
         year_end=args.year_end,
+        state=args.state,
+        title=args.title,
     )
 
 

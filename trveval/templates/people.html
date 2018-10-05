@@ -49,9 +49,9 @@
 			{% for person in people %}
 				<tr id="{{ person.id }}">
 					<td>{{ person.id }}</td>
-					<td>{{ person.name }}</td>
-					<td contenteditable="true">{{ person.date_of_birth }}</td>
-					<td contenteditable="true">{{ person.date_of_death }}</td>
+					<td contenteditable="true" data-type="name">{{ person.name }}</td>
+					<td contenteditable="true" data-type="dob">{{ person.date_of_birth }}</td>
+					<td contenteditable="true" data-type="dod">{{ person.date_of_death }}</td>
 				</tr>
 			{% endfor %}
 		</table>

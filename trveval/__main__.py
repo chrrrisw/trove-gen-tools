@@ -25,8 +25,23 @@ async def websocket_handler(request):
                 elif msg.data.startswith("relevant"):
                     _, article_id, relevance = msg.data.split()
                     request.app["database"].set_relevant(article_id, relevance)
+
+                # People page
+
+                elif msg.data.startswith("name"):
+                    _, person_id, name = msg.data.split(maxsplit=2)
+                    request.app["database"].set_name(person_id, name)
+                elif msg.data.startswith("dob"):
+                    _, person_id, dob = msg.data.split(maxsplit=2)
+                    request.app["database"].set_dob(person_id, dob)
+                elif msg.data.startswith("dod"):
+                    _, person_id, dob = msg.data.split(maxsplit=2)
+                    request.app["database"].set_dod(person_id, dob)
+
+                # TODO: get rid of this
                 else:
                     await ws.send_str(msg.data + "/answer")
+
             elif msg.type == WSMsgType.ERROR:
                 print("ws connection closed with exception %s" % ws.exception())
     finally:
@@ -145,7 +160,10 @@ async def handle_queries(request):
 
 
 async def on_startup(app):
-    print("Startup called")
+    """
+    Initialise the database, set any highlights, get an iterator for all
+    un-assessed articles, and get all the page templates.
+    """
 
     # Create and store the database
     app["database"] = ArticleDB(app["dbname"])
@@ -156,6 +174,9 @@ async def on_startup(app):
     # Get all unassessed articles
     session = app["database"].session
     articles = session.query(Article).filter_by(assessed=False)
+    if app["year"] is not None:
+        print("Restricting to year", app["year"])
+        articles = articles.filter(Article.date.like(f'{app["year"]}%'))
 
     # Get an iterator for the articles and retrieve the first
     app["iterator"] = articles.__iter__()
@@ -176,12 +197,12 @@ async def on_startup(app):
 
 
 async def on_cleanup(app):
-    print("Cleanup called")
+    """Called after shutdown. Commit the database."""
     app["database"].commit()
 
 
 async def on_shutdown(app):
-    print("Shutdown called")
+    """Called on shutdown, before cleanup. Close all websocket connections."""
     for ws in set(app["websockets"]):
         await ws.close(code=WSCloseCode.GOING_AWAY, message="Server shutdown")
 
@@ -198,6 +219,9 @@ def main():
     parser.add_argument(dest="database", help="The database to use.")
     parser.add_argument(
         "-l", "--highlights", dest="highlights", help="The file containing highlights."
+    )
+    parser.add_argument(
+        "-y", "--year", dest="year", type=str, help="Assess the given year only."
     )
     parser.add_argument(
         "-H",
@@ -230,6 +254,7 @@ def main():
     app["websockets"] = weakref.WeakSet()
     app["dbname"] = args.database
     app["highlights"] = highlights
+    app["year"] = args.year
 
     app.on_startup.append(on_startup)
     app.on_cleanup.append(on_cleanup)

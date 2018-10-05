@@ -40,6 +40,7 @@
 					<th>Rel</th>
 					<th>Date</th>
 					<th>Category</th>
+					<th>People</th>
 					<th>Heading</th>
 				</tr>
 			</thead>
@@ -53,6 +54,7 @@
 					<td><input type="checkbox" class="relevant" name="relevant" {% if article.relevant %}checked{% endif %}></td>
 					<td>{{ article.date }}</td>
 					<td>{{ article.category }}</td>
+					<td>{% for person in article.people %} {{ person.name }} {% endfor %}</td>
 					<td>{{ article.heading }}</td>
 				</tr>
 			{% endfor %}

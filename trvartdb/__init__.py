@@ -91,7 +91,20 @@ class ArticleDB(object):
         DBSession = sessionmaker(bind=engine)
         self._session = DBSession()
 
-    def add_article(self, json_article):
+    def commit(self):
+        print("Committing DB")
+        self._session.commit()
+
+    @property
+    def session(self):
+        return self._session
+
+    # ARTICLE METHODS
+
+    def add_article(self, article: Article):
+        self._session.add(article)
+
+    def add_json_article(self, json_article: dict):
 
         # Check for the newspaper title, only add if missing
         title_query = (
@@ -126,8 +139,10 @@ class ArticleDB(object):
             )
             self._session.add(article)
         else:
-            # TODO: Update article heading if changed on Trove
-            pass
+            if article_query.heading != json_article.get("heading", ""):
+                print("HEADING CHANGED")
+                print(article_query.heading, json_article.get("heading", ""))
+                article_query.heading = json_article.get("heading", "")
 
     def set_assessed(self, article_id, assessed):
         if type(assessed) == str:
@@ -151,6 +166,8 @@ class ArticleDB(object):
             article_query.relevant = relevant
             self._session.commit()
 
+    # PERSON METHODS
+
     def add_person(self, name, article=None):
         name_query = (
             self._session.query(Person).filter(Person.name == name).one_or_none()
@@ -167,13 +184,31 @@ class ArticleDB(object):
     def all_people(self):
         return self._session.query(Person)
 
-    def commit(self):
-        print("Committing DB")
-        self._session.commit()
+    def set_name(self, person_id, name):
+        person_query = (
+            self._session.query(Person).filter(Person.id == person_id).one_or_none()
+        )
+        if person_query is not None:
+            person_query.name = name
+            self._session.commit()
 
-    @property
-    def session(self):
-        return self._session
+    def set_dob(self, person_id, dob):
+        person_query = (
+            self._session.query(Person).filter(Person.id == person_id).one_or_none()
+        )
+        if person_query is not None:
+            person_query.date_of_birth = dob
+            self._session.commit()
+
+    def set_dod(self, person_id, dod):
+        person_query = (
+            self._session.query(Person).filter(Person.id == person_id).one_or_none()
+        )
+        if person_query is not None:
+            person_query.date_of_death = dod
+            self._session.commit()
+
+    # QUERY METHODS
 
     def add_query(self, query):
         """
@@ -189,6 +224,8 @@ class ArticleDB(object):
 
     def all_queries(self):
         return [q.query for q in self._session.query(Query)]
+
+    # HIGHLIGHT METHODS
 
     def add_highlight(self, highlight):
         """
@@ -213,6 +250,8 @@ class ArticleDB(object):
     def get_highlight_str(self):
         highlight_query = self._session.query(Highlight)
         return "+".join([h.highlight for h in highlight_query])
+
+    # YEAR METHODS
 
     def add_year(self, year):
         """

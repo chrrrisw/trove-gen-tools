@@ -20,7 +20,23 @@ def query_trove(payload):
         return records
 
 
-def collect_articles(apikey, db, queries, year_start, year_end):
+# Get the list of newspaper titles in Trove from a particular state
+# https://api.trove.nla.gov.au/v2/newspaper/titles?key=<INSERT KEY>&state=vic
+STATES = {
+    "int": "International",
+    "nsw": "New South Wales",
+    "act": "ACT",
+    "qld": "Queensland",
+    "tas": "Tasmania",
+    "sa": "South Australia",
+    "nt": "Northern Territory",
+    "wa": "Western Australia",
+    "vic": "Victoria",
+    "national": "National",
+}
+
+
+def collect_articles(apikey, db, queries, year_start, year_end, state, title):
     payload = {
         "key": apikey,
         "bulkHarvest": BULK_HARVEST,
@@ -46,6 +62,15 @@ def collect_articles(apikey, db, queries, year_start, year_end):
             db.add_year(year)
         db.commit()
 
+    if state is not None:
+        if state in STATES.keys():
+            payload["l-state"] = STATES[state]
+        else:
+            print("State must be one of", list(STATES.keys()))
+
+    if title is not None:
+        payload["l-title"] = title
+
     for query in db.all_queries():
 
         # New query, set q
@@ -70,7 +95,7 @@ def collect_articles(apikey, db, queries, year_start, year_end):
                 articles = records["article"]
                 for a in articles:
                     # print(a["title"]["id"])
-                    db.add_article(a)
+                    db.add_json_article(a)
 
             # This could be done by recursion, but I worry about depth
             while "nextStart" in records:
@@ -80,7 +105,7 @@ def collect_articles(apikey, db, queries, year_start, year_end):
                 if "article" in records:
                     articles = records["article"]
                     for a in articles:
-                        db.add_article(a)
+                        db.add_json_article(a)
 
         db.commit()
 
