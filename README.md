@@ -35,7 +35,7 @@ Request an API key by following the instructions [here](http://help.nla.gov.au/t
 Once you have your API key, you can run the collector like so:
 
 ```shell
-trvcoll --start 1860 --end 1865 your-api-key willoughbys.txt willoughbys.db
+trvcoll --start 1860 --end 1865 -q  willoughbys.txt your-api-key willoughbys.db
 ```
 
 This will create a sqlite3 database named `willoughbys.db` and populate it with every article that contains any of the search terms in `willoughbys.txt` between the years `1860` and `1865`.
