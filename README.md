@@ -68,7 +68,7 @@ These controls are:
 
 The `People` dropdown allows you to add new people, as well as search for existing people in the database. When you first start the assessment cycle, there won't be any people in the database. Separate entries in this dropdown by pressing the `enter` key.
 
-THe other pages are minimally functional at this time.
+The other pages are minimally functional at this time.
 
 ## Development install
 

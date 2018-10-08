@@ -13,5 +13,5 @@ def main():
     agg = Aggregator(args.from_dbname, args.to_dbname)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

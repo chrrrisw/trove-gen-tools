@@ -47,16 +47,17 @@ def collect_articles(apikey, db, queries, year_start, year_end, state, title):
         "n": 20,
         "l-decade": 0,
         "l-year": 0,
+        "reclevel": "full",
     }
 
-    # Add all the queries to the database
+    # Add all the new queries to the database
     if queries is not None:
         with open(queries, "r") as f:
             for l in f:
                 db.add_query(l.strip())
         db.commit()
 
-    # add all the years to the database
+    # add all the new years to the database
     if year_start is not None and year_end is not None:
         for year in range(year_start, year_end + 1):
             db.add_year(year)
@@ -74,9 +75,9 @@ def collect_articles(apikey, db, queries, year_start, year_end, state, title):
     for query in db.all_queries():
 
         # New query, set q
-        payload["q"] = query
+        payload["q"] = query.query
 
-        db.add_query(payload["q"])
+        # db.add_query(payload["q"])
 
         for year in db.all_years():
             print("Processing", payload["q"], year)
@@ -93,9 +94,9 @@ def collect_articles(apikey, db, queries, year_start, year_end, state, title):
 
             if "article" in records:
                 articles = records["article"]
-                for a in articles:
+                for article in articles:
                     # print(a["title"]["id"])
-                    db.add_json_article(a)
+                    db.add_json_article(json_article=article, query=query)
 
             # This could be done by recursion, but I worry about depth
             while "nextStart" in records:
@@ -104,8 +105,8 @@ def collect_articles(apikey, db, queries, year_start, year_end, state, title):
                 records = query_trove(payload)
                 if "article" in records:
                     articles = records["article"]
-                    for a in articles:
-                        db.add_json_article(a)
+                    for article in articles:
+                        db.add_json_article(json_article=article, query=query)
 
         db.commit()
 

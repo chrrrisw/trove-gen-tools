@@ -14,14 +14,20 @@ class Aggregator(object):
         from_articles = self.from_db.session.query(Article).filter_by(relevant=True)
         for old_article in from_articles:
             new_article = Article()
-            [setattr(new_article, col.name, getattr(old_article, col.name)) for col in old_article.__table__.columns]
+            [
+                setattr(new_article, col.name, getattr(old_article, col.name))
+                for col in old_article.__table__.columns
+            ]
             self.to_db.add_article(new_article)
 
         self.to_db.commit()
 
     def new_object(self, from_object):
         new_instance = from_object.__class__()
-        [setattr(new_instance, col.name, getattr(from_object, col.name)) for col in from_object.__table__.columns]
+        [
+            setattr(new_instance, col.name, getattr(from_object, col.name))
+            for col in from_object.__table__.columns
+        ]
         return new_instance
 
     def copy_titles(self):

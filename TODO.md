@@ -6,7 +6,6 @@
 - [ ] Multiple connections (aiosqlite, sqlalchemy_aio)
 - [ ] DB migration scripts
 - [ ] Schema versioning
-- [ ] Merge tool for relevant articles
 - [ ] Full text retrieval
 
 ## Collector
@@ -16,6 +15,11 @@
 - [x] State (including limiting search)
 - [x] Use query and years tables for re-run (allow modification on cli)
 - [ ] Update article info after correction on Trove
+- [x] Link query to article
+- [x] Add article correction count
+- [ ] Add whether you have corrected the article
+- [x] Add article word count
+- [x] Illustrated flag
 
 ## Assessment
 
@@ -33,7 +37,9 @@
 
 - [ ] Re-evaluation (undo)
 - [ ] Web interface for DB modification
-- [ ] Show/modify people
+- [x] Show people
+- [ ] Modify people
+- [x] Show matched queries
 - [ ] Notes for articles
 
 ## People
@@ -56,3 +62,27 @@
 ## Export tools
 
 - [ ] Export only relevant
+
+## Merge tool
+
+- [ ] Merge tool for relevant articles
+
+## Web App
+
+The web application is a thought experiment at this time. It should be hosted
+somewhere and allow users to load and save databases on their local disk. All
+functionality should be client-side (in the browser) so that all information is
+private.
+
+Technologies of interest:
+
+- http://aaronpowell.github.io/db.js/
+- https://github.com/kripken/sql.js
+- https://pouchdb.com/
+- https://developer.mozilla.org/en-US/docs/Web/API/File/Using_files_from_web_applications
+
+- [ ] Create web application version
+  - [ ] Load/save to local disk
+  - [ ] Use IndexedDB for in-session functionality?
+  - [ ] Should match functionality of trvcoll/trveval etc above
+  - [ ] Databases should be shareable between python and web versions

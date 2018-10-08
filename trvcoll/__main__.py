@@ -32,7 +32,7 @@ def main():
 
     adb = ArticleDB(args.database)
 
-    if len(adb.all_queries()) == 0 and args.queries is None:
+    if len(adb.all_query_strings()) == 0 and args.queries is None:
         print("You must specify some queries (-q) for a new database")
         exit(-1)
 

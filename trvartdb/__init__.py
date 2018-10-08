@@ -17,11 +17,30 @@ class NewspaperTitle(Base):
     articles = relationship("Article")  # One to many, title is parent
 
 
+# Two-way association between Article and Person
 article_person = Table(
     "article_person",
     Base.metadata,
     Column("article_id", Integer, ForeignKey("article.id")),
     Column("person_id", Integer, ForeignKey("person.id")),
+)
+
+
+# Two-way association between Article and Note
+article_note = Table(
+    "article_note",
+    Base.metadata,
+    Column("article_id", Integer, ForeignKey("article.id")),
+    Column("note_id", Integer, ForeignKey("note.id")),
+)
+
+
+# Two-way association between Article and Query
+article_query = Table(
+    "article_query",
+    Base.metadata,
+    Column("article_id", Integer, ForeignKey("article.id")),
+    Column("query_id", Integer, ForeignKey("query.id")),
 )
 
 
@@ -41,9 +60,14 @@ class Article(Base):
     id = Column(Integer, primary_key=True)
     title_id = Column(Integer, ForeignKey("title.id"))
     people = relationship("Person", secondary=article_person, back_populates="articles")
+    queries = relationship("Query", secondary=article_query, back_populates="articles")
+    notes = relationship("Note", secondary=article_note, back_populates="articles")
     page = Column(Integer)
     assessed = Column(Boolean)
     relevant = Column(Boolean)
+    illustrated = Column(Boolean)
+    correctionCount = Column(Integer)
+    wordCount = Column(Integer)
     date = Column(String(10))
     category = Column(String)
     heading = Column(String)
@@ -58,6 +82,9 @@ class Year(Base):
 class Query(Base):
     __tablename__ = "query"
     id = Column(Integer, primary_key=True)
+    articles = relationship(
+        "Article", secondary=article_query, back_populates="queries"
+    )
     query = Column(String)
 
 
@@ -65,6 +92,13 @@ class Highlight(Base):
     __tablename__ = "highlight"
     id = Column(Integer, primary_key=True)
     highlight = Column(String)
+
+
+class Note(Base):
+    __tablename__ = "note"
+    id = Column(Integer, primary_key=True)
+    articles = relationship("Article", secondary=article_note, back_populates="notes")
+    note = Column(String)
 
 
 class ArticleDB(object):
@@ -104,45 +138,54 @@ class ArticleDB(object):
     def add_article(self, article: Article):
         self._session.add(article)
 
-    def add_json_article(self, json_article: dict):
+    def add_json_article(self, json_article: dict, query: Query = None):
 
         # Check for the newspaper title, only add if missing
-        title_query = (
+        existing_title = (
             self._session.query(NewspaperTitle)
             .filter(NewspaperTitle.id == json_article["title"]["id"])
             .one_or_none()
         )
-        if title_query is None:
+        if existing_title is None:
             # print(json_article["title"]["id"], "is new title")
-            title = NewspaperTitle(
+            new_title = NewspaperTitle(
                 id=json_article["title"]["id"], title=json_article["title"]["value"]
             )
-            self._session.add(title)
+            self._session.add(new_title)
 
         # Check for the article, only add if missing
-        article_query = (
+        existing_article = (
             self._session.query(Article)
             .filter(Article.id == json_article["id"])
             .one_or_none()
         )
-        if article_query is None:
+        if existing_article is None:
             # print(json_article["id"], "is new article")
-            article = Article(
+            new_article = Article(
                 id=json_article["id"],
                 title_id=json_article["title"]["id"],
                 page=json_article["page"],
                 assessed=False,
                 relevant=False,
+                correctionCount=json_article["correctionCount"],
+                illustrated=(json_article["illustrated"].lower() == "y"),
+                wordCount=json_article["wordCount"],
                 date=json_article["date"],
                 category=json_article["category"],
                 heading=json_article.get("heading", ""),
             )
-            self._session.add(article)
+            self._session.add(new_article)
+            if query is not None:
+                # TODO: Does this only make the link once?
+                new_article.queries.append(query)
         else:
-            if article_query.heading != json_article.get("heading", ""):
+            if existing_article.heading != json_article.get("heading", ""):
                 print("HEADING CHANGED")
-                print(article_query.heading, json_article.get("heading", ""))
-                article_query.heading = json_article.get("heading", "")
+                print(existing_article.heading, json_article.get("heading", ""))
+                existing_article.heading = json_article.get("heading", "")
+            if query is not None:
+                # TODO: Does this only make the link once?
+                existing_article.queries.append(query)
 
     def set_assessed(self, article_id, assessed):
         if type(assessed) == str:
@@ -169,17 +212,19 @@ class ArticleDB(object):
     # PERSON METHODS
 
     def add_person(self, name, article=None):
-        name_query = (
+        existing_person = (
             self._session.query(Person).filter(Person.name == name).one_or_none()
         )
-        if name_query is None:
-            person = Person(name=name, date_of_birth="", date_of_death="")
-            self._session.add(person)
+        if existing_person is None:
+            new_person = Person(name=name, date_of_birth="", date_of_death="")
+            self._session.add(new_person)
             if article is not None:
-                article.people.append(person)
+                # TODO: Does this only make the link once?
+                article.people.append(new_person)
         else:
             if article is not None:
-                article.people.append(name_query)
+                # TODO: Does this only make the link once?
+                article.people.append(existing_person)
 
     def all_people(self):
         return self._session.query(Person)
@@ -210,20 +255,33 @@ class ArticleDB(object):
 
     # QUERY METHODS
 
-    def add_query(self, query):
+    def add_query(self, query, article=None):
         """
         Add a query to the database.
 
         Queries are passed to Trove in the initial collection phase.
         """
-        query_query = (
+        existing_query = (
             self._session.query(Query).filter(Query.query == query).one_or_none()
         )
-        if query_query is None:
-            self._session.add(Query(query=query))
+        if existing_query is None:
+            new_query = Query(query=query)
+            self._session.add(new_query)
+            if article is not None:
+                # TODO: Does this only make the link once?
+                article.queries.append(new_query)
+        else:
+            if article is not None:
+                # TODO: Does this only make the link once?
+                article.queries.append(existing_query)
+
+    def all_query_strings(self):
+        """Return a list of the query strings."""
+        return [q.query for q in self._session.query(Query)]
 
     def all_queries(self):
-        return [q.query for q in self._session.query(Query)]
+        """Return the queries."""
+        return self._session.query(Query)
 
     # HIGHLIGHT METHODS
 
