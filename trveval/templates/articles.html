@@ -20,7 +20,7 @@
 		crossorigin="anonymous"></script>
 </head>
 <body>
-	<div class="ui fixed menu">
+	<div class="ui top fixed menu">
 		<div class="ui container">
 			<div class="header item">Articles in {{ db_title }}</div>
 			<div class="right icon menu">
@@ -31,7 +31,7 @@
 			</div>
 		</div>
 	</div>
-	<div class="ui main container">
+	<div class="ui main container pusher">
 		<table class="ui selectable celled compact table">
 			<thead>
 				<tr>
@@ -49,7 +49,7 @@
 
 			</tbody>
 			{% for article in articles %}
-				<tr id="{{ article.id }}">
+				<tr class="article" id="{{ article.id }}">
 					<td>{{ article.id }}</td>
 					<td><input type="checkbox" class="assessed" name="assessed" {% if article.assessed %}checked{% endif %}></td>
 					<td><input type="checkbox" class="relevant" name="relevant" {% if article.relevant %}checked{% endif %}></td>
@@ -57,10 +57,14 @@
 					<td>{{ article.category }}</td>
 					<td>{% for person in article.people %}{{ person.name }}{{ ", " if not loop.last }}{% endfor %}</td>
 					<td>{% for query in article.queries %}{{ query.query }}{{ ", " if not loop.last }}{% endfor %}</td>
-					<td>{{ article.heading }}</td>
+					<td>{{ article.heading }}<i class="ellipsis horizontal icon"></i></td>
 				</tr>
 			{% endfor %}
 		</table>
+	</div>
+	<div class="ui bottom sidebar">
+		<h1>Sidebar</h1>
+		<p>Blah blah</p>
 	</div>
 </body>
 </html>
