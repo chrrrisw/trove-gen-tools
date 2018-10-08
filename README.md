@@ -76,7 +76,7 @@ THe other pages are minimally functional at this time.
 
 ```shell
 
-git clone
+git clone https://github.com/chrrrisw/trove-gen-tools.git
 cd trove-gen-tools
 pip install -e .
 ```
