@@ -1,5 +1,7 @@
 from trvartdb import ArticleDB, Article
 
+# TODO: Cannot rely on IDs being same between databases - search on name, etc
+
 
 class Aggregator(object):
     """Reads one ArticleDB and transfers relevant articles to another."""

@@ -1,0 +1,14 @@
+html, body {
+	height: 100%;
+	width: 100%;
+	padding: 0;
+	margin: 0;
+}
+
+.main.container {
+	margin-top: 5em;
+}
+
+.ui.top.fixed.menu.disconnected {
+	background-color: #dfffdf;
+}

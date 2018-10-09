@@ -129,6 +129,10 @@ class ArticleDB(object):
         print("Committing DB")
         self._session.commit()
 
+    def close(self):
+        print("Closing DB")
+        self._session.close()
+
     @property
     def session(self):
         return self._session

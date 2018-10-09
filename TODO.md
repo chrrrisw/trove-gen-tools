@@ -1,25 +1,30 @@
 # TODO
 
 - [ ] Packaging (including console scripts)
-- [ ] Deplyment to PyPi
+- [ ] Deployment to PyPi
 - [ ] CSV import/export
 - [ ] Multiple connections (aiosqlite, sqlalchemy_aio)
 - [ ] DB migration scripts
 - [ ] Schema versioning
 - [ ] Full text retrieval
+- [ ] Websocket connection status on all pages.
+- [ ] Icon
+- [ ] Electron app?
+- [ ] Windows/Mac instructions
+- [ ] Command line help
+- [ ] Web help
+- [ ] Reconnection for websocket
+- [ ] Increase container width restriction.
 
 ## Collector
 
-- [x] Remove assessment from collector
 - [ ] Newspaper titles (including limiting search)
-- [x] State (including limiting search)
-- [x] Use query and years tables for re-run (allow modification on cli)
 - [ ] Update article info after correction on Trove
-- [x] Link query to article
 - [x] Add article correction count
 - [ ] Add whether you have corrected the article
 - [x] Add article word count
 - [x] Illustrated flag
+- [ ] Web interface for collector
 
 ## Assessment
 
@@ -32,6 +37,7 @@
 - [x] Stop people enter from submitting form
 - [ ] Allow single article assessment
 - [x] Allow assessment based on date
+- [ ] Finished message
 
 ## Articles
 
@@ -41,6 +47,8 @@
 - [ ] Modify people
 - [x] Show matched queries
 - [ ] Notes for articles
+- [ ] Off-site article link
+- [ ] Full details sidebar
 
 ## People
 

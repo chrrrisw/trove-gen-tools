@@ -52,9 +52,11 @@ def collect_articles(apikey, db, queries, year_start, year_end, state, title):
 
     # Add all the new queries to the database
     if queries is not None:
-        with open(queries, "r") as f:
-            for l in f:
-                db.add_query(l.strip())
+        with open(queries, "r") as query_file:
+            for line in query_file:
+                query = line.strip()
+                if query != "":
+                    db.add_query(query)
         db.commit()
 
     # add all the new years to the database

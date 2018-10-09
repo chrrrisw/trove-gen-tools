@@ -1,36 +1,11 @@
-<!DOCTYPE html>
-<html>
-<head>
-	<meta charset="UTF-8">
-	<title>Articles in {{ db_title }}</title>
+{% extends "common.html" %}
+{% block styleinclude %}
 	<link rel="stylesheet" type="text/css" href="static/articles.css">
+{% endblock %}
+{% block jsinclude %}
 	<script type="text/javascript" src="static/articles.js"></script>
-	<link
-		rel="stylesheet"
-		href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.0/dist/semantic.min.css"
-		integrity="sha256-9mbkOfVho3ZPXfM7W8sV2SndrGDuh7wuyLjtsWeTI1Q="
-		crossorigin="anonymous">
-	<script
-		src="https://code.jquery.com/jquery-3.1.1.min.js"
-		integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
-		crossorigin="anonymous"></script>
-	<script
-		src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.0/dist/semantic.min.js"
-		integrity="sha256-x1fC6BXl6BwnUhfQqqqC0Fd/n12wH+u8u9va6+E7xaA="
-		crossorigin="anonymous"></script>
-</head>
-<body>
-	<div class="ui top fixed menu">
-		<div class="ui container">
-			<div class="header item">Articles in {{ db_title }}</div>
-			<div class="right icon menu">
-				<a class="item" href="/"><i class="check square outline icon"></i>Assessment</a>
-				<div class="disabled item" href="articles.html"><i class="newspaper outline icon"></i>Articles</div>
-				<a class="item" href="people.html"><i class="address book outline icon"></i>People</a>
-				<a class="item" href="queries.html"><i class="edit outline icon"></i>Queries</a>
-			</div>
-		</div>
-	</div>
+{% endblock %}
+{% block pagecontent %}
 	<div class="ui main container pusher">
 		<table class="ui selectable celled compact table">
 			<thead>
@@ -50,7 +25,7 @@
 			</tbody>
 			{% for article in articles %}
 				<tr class="article" id="{{ article.id }}">
-					<td>{{ article.id }}</td>
+					<td>{{ article.id }} <i class="external alternate icon"></i></td>
 					<td><input type="checkbox" class="assessed" name="assessed" {% if article.assessed %}checked{% endif %}></td>
 					<td><input type="checkbox" class="relevant" name="relevant" {% if article.relevant %}checked{% endif %}></td>
 					<td>{{ article.date }}</td>
@@ -66,5 +41,4 @@
 		<h1>Sidebar</h1>
 		<p>Blah blah</p>
 	</div>
-</body>
-</html>
+{% endblock %}

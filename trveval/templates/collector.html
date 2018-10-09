@@ -1,0 +1,79 @@
+{% extends "common.html" %}
+{% block styleinclude %}
+	<link rel="stylesheet" type="text/css" href="static/collector.css">
+{% endblock %}
+{% block jsinclude %}
+	<script type="text/javascript" src="static/collector.js"></script>
+{% endblock %}
+{% block pagecontent %}
+	<div class="ui main container">
+
+		<h1>This page is non-functional at this time.</h1>
+		<p>It is intended to be a web interface to the trvcoll script.</p>
+
+		<div class="ui form">
+
+			<h4 class="ui dividing header">Trove API</h4>
+			<div class="fields">
+				<div class="field" data-tooltip="Enter your Trove API key here" data-position="bottom center">
+					<label>API Key</labebl>
+					<input type="text" name="apikey" id="apikey" placeholder="<key>">
+				</div>
+			</div>
+
+			<h4 class="ui dividing header">Database</h4>
+			<div class="fields">
+				<div class="field" data-tooltip="Create a new database file" data-position="bottom center">
+					<button class="ui button" id="newdb">New Database</button>
+				</div>
+				<div class="field" data-tooltip="Load an existing database" data-position="bottom center">
+					<button class="ui button" id="loaddb">Load Existing</button>
+				</div>
+				<div class="ui basic large red label">Please select a database</div>
+			</div>
+
+			<h4 class="ui dividing header">Queries</h4>
+			<div class="fields">
+				<div class="field" data-tooltip="Enter your queries filename here" data-position="bottom center">
+					<label>Query filename</labebl>
+					<input type="file" name="queryname" id="queryname" placeholder="<filename>">
+				</div>
+			</div>
+
+			<h4 class="ui dividing header">Date Range</h4>
+			<div class="fields">
+				<div class="field" data-tooltip="month and day are optional" data-position="bottom center">
+					<label>Start date</labebl>
+					<input type="text" placeholder="yyyy-mm-dd">
+				</div>
+				<div class="field" data-tooltip="Add users to your feed" data-position="bottom center">
+					<label>End date</labebl>
+					<input type="text" placeholder="yyyy-mm-dd">
+				</div>
+			</div>
+
+			<h4 class="ui dividing header">Other Restrictions</h4>
+			<div class="fields">
+				<div class="field">
+					<label>State</label>
+					<select class="ui search dropdown">
+						<option value="all">All</option>
+						<option value="nsw">New South Wales</option>
+						<option value="act">ACT</option>
+						<option value="qld">Queensland</option>
+						<option value="tas">Tasmania</option>
+						<option value="sa">South Australia</option>
+						<option value="nt">Northern Territory</option>
+						<option value="wa">Western Australia</option>
+						<option value="vic">Victoria</option>
+						<option value="national">National</option>
+						<option value="int">International</option>
+					</select>
+				</div>
+			</div>
+
+			<button class="ui button" id="collect">Run collection</button>
+		</div>
+
+	</div>
+{% endblock %}

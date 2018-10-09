@@ -52,6 +52,15 @@ async def websocket_handler(request):
     return ws
 
 
+async def handle_collector(request):
+    """Return a response for the collector page."""
+    # all_articles = request.app["database"].session.query(Article)
+    return web.Response(
+        body=request.app["collector_template"].render(page_title="Trove Collector"),
+        content_type="text/html",
+    )
+
+
 async def handle_post(request):
 
     data = await request.post()
@@ -105,7 +114,7 @@ async def handle_post(request):
     )
 
 
-async def handle_get(request):
+async def handle_assessment(request):
     if request.app["current_article"] is None:
         return web.Response(text="Finished!")
     else:
@@ -128,7 +137,7 @@ async def handle_articles(request):
     all_articles = request.app["database"].session.query(Article)
     return web.Response(
         body=request.app["articles_template"].render(
-            db_title=request.app["dbname"], articles=all_articles
+            page_title=f'Articles in {request.app["dbname"]}', articles=all_articles
         ),
         content_type="text/html",
     )
@@ -139,7 +148,7 @@ async def handle_people(request):
     all_people = request.app["database"].all_people()
     return web.Response(
         body=request.app["people_template"].render(
-            db_title=request.app["dbname"], people=all_people
+            page_title=f'People in {request.app["dbname"]}', people=all_people
         ),
         content_type="text/html",
     )
@@ -150,7 +159,7 @@ async def handle_queries(request):
     # all_people = request.app["database"].all_people()
     return web.Response(
         body=request.app["queries_template"].render(
-            db_title=request.app["dbname"],
+            page_title=f'Queries in {request.app["dbname"]}',
             queries=request.app["database"].session.query(Query),
             highlights=request.app["database"].session.query(Highlight),
             years=request.app["database"].session.query(Year),
@@ -190,6 +199,7 @@ async def on_startup(app):
         loader=PackageLoader("trveval", "templates"),
         autoescape=select_autoescape(["html"]),
     )
+    app["collector_template"] = env.get_template("collector.html")
     app["assessment_template"] = env.get_template("assessment.html")
     app["articles_template"] = env.get_template("articles.html")
     app["people_template"] = env.get_template("people.html")
@@ -265,9 +275,15 @@ def main():
     # Handler for websocket connections
     app.router.add_route("GET", "/ws", websocket_handler)
 
+    # The articles page
+    # TODO: Should be root
+    app.router.add_route("GET", "/collector.html", handle_collector)
+
     # The assessment page
-    app.router.add_route("GET", "/", handle_get)
+    app.router.add_route("GET", "/", handle_assessment)
+    app.router.add_route("GET", "/assessment.html", handle_assessment)
     app.router.add_route("POST", "/", handle_post)
+    app.router.add_route("POST", "/assessment.html", handle_post)
 
     # The articles page
     app.router.add_route("GET", "/articles.html", handle_articles)

@@ -23,9 +23,9 @@ Collects articles returned from a list of search terms.
 Create a file that contains your search terms (one per line). It should look something like this:
 
 ```text
-willoughby
-willoby
-willowby
+"william willoughby"~1
+"wm willoughby"~1
+willoughby+blacksmith
 ```
 
 Let's call this one `willoughbys.txt`
@@ -35,10 +35,10 @@ Request an API key by following the instructions [here](http://help.nla.gov.au/t
 Once you have your API key, you can run the collector like so:
 
 ```shell
-trvcoll --start 1860 --end 1865 -q  willoughbys.txt your-api-key willoughbys.db
+trvcoll --start 1860 --end 1865 -q willoughbys.txt --state sa your-api-key willoughbys.db
 ```
 
-This will create a sqlite3 database named `willoughbys.db` and populate it with every article that contains any of the search terms in `willoughbys.txt` between the years `1860` and `1865`.
+This will create a sqlite3 database named `willoughbys.db` and populate it with every article from South Australian newspapers that contain any of the search terms in `willoughbys.txt` between the years `1860` and `1865`.
 
 The database can then be used by the evaluation tool described below.
 
