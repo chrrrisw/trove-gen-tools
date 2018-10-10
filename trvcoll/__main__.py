@@ -1,6 +1,6 @@
 import argparse
 
-from trvartdb import ArticleDB
+from trvartdb.articledb import ArticleDB
 
 from .coll import collect_articles
 

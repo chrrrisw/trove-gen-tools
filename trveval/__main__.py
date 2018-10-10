@@ -5,7 +5,8 @@ import weakref
 from aiohttp import web, WSMsgType, WSCloseCode
 from jinja2 import Environment, PackageLoader, select_autoescape
 
-from trvartdb import Article, ArticleDB, Query, Highlight, Year
+from trvartdb import Article, Query, Highlight, Year
+from trvartdb.articledb import ArticleDB
 
 
 async def websocket_handler(request):

@@ -11,7 +11,15 @@ setup(
     packages=find_packages("."),
     package_data={"trveval": ["static/*.js", "static/*.css", "templates/*.html"]},
     include_package_data=True,
-    install_requires=["aiohttp", "jinja2", "requests", "sqlalchemy"],
+    install_requires=[
+        "aiohttp",
+        "jinja2",
+        "pandas",
+        "requests",
+        "sqlalchemy",
+        "xlrd",
+        "xlsxwriter",
+    ],
     entry_points={
         "console_scripts": [
             "trveval=trveval.__main__:main",

@@ -1,4 +1,5 @@
-from trvartdb import ArticleDB, Article
+from trvartdb import Article
+from trvartdb.articledb import ArticleDB
 
 # TODO: Cannot rely on IDs being same between databases - search on name, etc
 
