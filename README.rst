@@ -35,7 +35,7 @@ Create a file that contains your search terms (one per line). It should look som
 
 Let's call this one ``willoughbys.txt``
 
-Request an API key by following the instructions `here<http://help.nla.gov.au/trove/building-with-trove/api>`_.
+Request an API key by following the instructions `here<http://help.nla.gov.au/trove/building-with-trove/api>`.
 
 Once you have your API key, you can run the collector like so:
 
