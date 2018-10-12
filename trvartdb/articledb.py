@@ -83,7 +83,9 @@ class ArticleDB(object):
                 illustrated=(json_article["illustrated"].lower() == "y"),
                 wordCount=json_article["wordCount"],
                 # date=json_article["date"],
-                date=datetime.datetime.strptime(json_article["date"], "%Y-%m-%d").date(),
+                date=datetime.datetime.strptime(
+                    json_article["date"], "%Y-%m-%d"
+                ).date(),
                 category=json_article["category"],
                 heading=json_article.get("heading", ""),
             )
@@ -172,7 +174,7 @@ class ArticleDB(object):
 
     # QUERY METHODS
 
-    def add_query(self, query, article=None):
+    def add_query(self, query: str, article: Article=None):
         """
         Add a query to the database.
 

@@ -79,12 +79,8 @@ def collect_articles(apikey, db, queries, year_start, year_end, state, title):
         # New query, set q
         payload["q"] = query.query
 
-        # db.add_query(payload["q"])
-
         for year in db.all_years():
             print("Processing", payload["q"], year)
-
-            db.add_year(year)
 
             # New year, set s, decade and year
             payload["s"] = "*"

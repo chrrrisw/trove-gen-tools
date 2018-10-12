@@ -5,7 +5,8 @@ from sqlalchemy import create_engine, MetaData, Table
 from sqlalchemy.engine.reflection import Inspector
 import pandas as pd
 
-from . import Article, Base, Highlight, NewspaperTitle, Note, Person, Query, Year
+from . import Article, Base, Highlight, NewspaperTitle, Note, Person, Query, Year, article_query
+from .articledb import ArticleDB
 
 logger = logging.getLogger(__name__)
 
@@ -71,28 +72,118 @@ class ArticleCSV(object):
         else:
             pass
 
-    def import_db_from_xlsx(self, xlsxname):
-        # Get a list of table names
-        # table_names = [Base.metadata.tables.keys()]
 
-        # Construct a dictionary of the current database tables and corresponding
-        # classes
-        tables_and_classes = {}
-        for c in Base._decl_class_registry.values():
-            if hasattr(c, "__table__"):
-                print(c.__table__, type(c.__table__), c.__table__.name)
-                tables_and_classes[c.__table__.name] = c
+def import_db_from_xlsx(xlsxname, dbname):
+    """
+    Rather than use df.to_sql() we need a way to migrate and old database schema
+    to a new one, hence this routine uses Base.
+    """
 
-        if os.path.exists(xlsxname):
-            for table_name in tables_and_classes.keys():
-                df = pd.read_excel(xlsxname, sheet_name=table_name)
-                df.to_sql()
-            pass
-        else:
-            pass
+    # Get a list of table names
+    # table_names = [Base.metadata.tables.keys()]
 
+    # Construct a dictionary of the current database tables and corresponding
+    # classes
+    tables_and_classes = {}
+    for klass in Base._decl_class_registry.values():
+        if hasattr(klass, "__table__"):
+            print(klass.__table__, type(klass.__table__), klass.__table__.name, klass)
+            tables_and_classes[klass.__table__.name] = {"klass": klass}
 
-def export_db_as_csv(db_name):
+    if os.path.exists(xlsxname):
+        for table_name in tables_and_classes.keys():
+            tables_and_classes[table_name]["df"] = pd.read_excel(
+                xlsxname, sheet_name=table_name
+            )
+            # df.to_sql()
+
+        # We now have a DataFrame and a Class for each Table
+
+        # Create a new database
+        if not os.path.exists(dbname):
+
+            adb = ArticleDB(dbname)
+            session = adb.session
+
+            print("## QUERY")
+            if "query" in tables_and_classes:
+                for index, row in tables_and_classes["query"]["df"].iterrows():
+                    new_query = Query(**dict(row))
+                    session.add(new_query)
+            adb.commit()
+
+            print("## HIGHLIGHT")
+            if "highlight" in tables_and_classes:
+                for index, row in tables_and_classes["highlight"]["df"].iterrows():
+                    new_highlight = Highlight(**dict(row))
+                    session.add(new_highlight)
+            adb.commit()
+
+            # print("## YEAR")
+            # if "year" in tables_and_classes:
+            #     for index, row in tables_and_classes["year"]["df"].iterrows():
+            #         new_year = Year(**dict(row))
+            #         session.add(new_year)
+            # adb.commit()
+
+            print("## TITLE")
+            if "title" in tables_and_classes:
+                for index, row in tables_and_classes["title"]["df"].iterrows():
+                    new_title = NewspaperTitle(**dict(row))
+                    session.add(new_title)
+            adb.commit()
+
+            print("## PERSON")
+            if "person" in tables_and_classes:
+                for index, row in tables_and_classes["person"]["df"].iterrows():
+                    new_person = Person(**dict(row))
+                    session.add(new_person)
+            adb.commit()
+
+            print("## NOTE")
+            if "note" in tables_and_classes:
+                for index, row in tables_and_classes["note"]["df"].iterrows():
+                    new_note = Note(**dict(row))
+                    session.add(new_note)
+            adb.commit()
+
+            print("## ARTICLE")
+            if "article" in tables_and_classes:
+                for index, row in tables_and_classes["article"]["df"].iterrows():
+                    new_article = Article(**dict(row))
+                    session.add(new_article)
+            adb.commit()
+
+            # if "article_note" in tables_and_classes:
+            #     for index, row in tables_and_classes["article_note"]["df"].iterrows():
+            #         new_article_note = Article(**dict(row))
+            #         session.add(new_article_note)
+
+            # if "article_person" in tables_and_classes:
+            #     for index, row in tables_and_classes["article_person"]["df"].iterrows():
+            #         new_article_person = Article(**dict(row))
+            #         session.add(new_article_person)
+
+            print("## ARTICLE_QUERY")
+            if "article_query" in tables_and_classes:
+                for index, row in tables_and_classes["article_query"]["df"].iterrows():
+                    existing_article = session.query(Article).filter(Article.id == row["article_id"])
+                    existing_query = session.query(Query).filter(Query.id == row["query_id"])
+                    existing_article.queries.append(existing_query)
+
+            # db.add_year(year)
+            # db.add_json_article(json_article=article, query=query)
+            # title
+            # article
+
+            adb.commit()
+
+    else:
+        raise FileNotFoundError(xlsxname)
+
+    return tables_and_classes
+
+def export_db_as_csv(db_name: str = None):
     """
     Open the database file, use an inspector to get table and column names,
     select everything in each table and write it to a corresponding CSV file.
@@ -100,6 +191,16 @@ def export_db_as_csv(db_name):
     Because this method uses reflection, this should not need to change
     as the database structure changes.
     """
+
+    # Called as main function means we need to get db_name from the command line
+    if db_name is None:
+        import sys
+
+        if len(sys.argv) < 2:
+            print(f"Usage: {sys.argv[0]} <database_filename>")
+            exit(-1)
+        db_name = sys.argv[1]
+
     engine = create_engine(f"sqlite:///{db_name}", echo=False)
     inspector = Inspector.from_engine(engine)
     for table_name in inspector.get_table_names():
@@ -119,7 +220,7 @@ def export_db_as_csv(db_name):
                     writer.writerow(result.values())
 
 
-def export_db_as_xlsx(db_name):
+def export_db_as_xlsx(db_name: str = None):
     """
     Open the database file, use an inspector to get table names,
     read each table into a pandas dataframe and write them to corresponding
@@ -128,6 +229,16 @@ def export_db_as_xlsx(db_name):
     Because this method uses reflection, this should not need to change
     as the database structure changes.
     """
+
+    # Called as main function means we need to get db_name from the command line
+    if db_name is None:
+        import sys
+
+        if len(sys.argv) < 2:
+            print(f"Usage: {sys.argv[0]} <database_filename>")
+            exit(-1)
+        db_name = sys.argv[1]
+
     xlsx_name = f"{os.path.splitext(db_name)[0]}.xlsx"
     writer = pd.ExcelWriter(xlsx_name, engine="xlsxwriter", date_format="YYYY-MM-DD")
     engine = create_engine(f"sqlite:///{db_name}", echo=False)

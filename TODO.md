@@ -25,6 +25,7 @@
 - [x] Add article word count
 - [x] Illustrated flag
 - [ ] Web interface for collector
+- [ ] List of states, stored in database
 
 ## Assessment
 
