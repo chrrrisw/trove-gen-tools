@@ -1,28 +1,15 @@
 import csv
 import logging
 import os
-from sqlalchemy import create_engine, MetaData, Table
+from sqlalchemy import create_engine
 from sqlalchemy.engine.reflection import Inspector
 import pandas as pd
+import numpy as np
 
-from . import Article, Base, Highlight, NewspaperTitle, Note, Person, Query, Year, article_query
+from . import Article, Base, Highlight, NewspaperTitle, Note, Person, Query, Year
 from .articledb import ArticleDB
 
 logger = logging.getLogger(__name__)
-
-# Mapping of table name to filename
-CSV_NAMES = {
-    "article": {"csvname": "{}", "reader": None, "writer": None},
-    "highlight": {"csvname": "", "reader": None, "writer": None},
-    "title": {"csvname": "", "reader": None, "writer": None},
-    "note": {"csvname": "", "reader": None, "writer": None},
-    "person": {"csvname": "", "reader": None, "writer": None},
-    "query": {"csvname": "", "reader": None, "writer": None},
-    "year": {"csvname": "", "reader": None, "writer": None},
-    "article_person": {"csvname": "", "reader": None, "writer": None},
-    "article_note": {"csvname": "", "reader": None, "writer": None},
-    "article_query": {"csvname": "", "reader": None, "writer": None},
-}
 
 
 class ArticleCSV(object):
@@ -73,6 +60,74 @@ class ArticleCSV(object):
             pass
 
 
+# A mapping from sheet name to column data types
+TABLE_TO_DTYPE = {
+    "article": {
+        "id": np.int,
+        "title_id": np.int,
+        "page": np.int,
+        "assessed": np.int,
+        "relevant": np.int,
+        "illustrated": np.int,
+        "correctionCount": np.int,
+        "wordCount": np.int,
+        "date": np.datetime64,
+        "category": str,
+        "heading": str,
+    },
+    "highlight": {"id": np.int, "highlight": str},
+    "note": {"id": np.int, "note": str},
+    "person": {"id": np.int, "name": str, "date_of_birth": str, "date_of_death": str},
+    "query": {"id": np.int, "query": str},
+    "title": {"id": np.int, "title": str},
+    "year": {"id": np.int, "year": np.int},
+    "article_note": None,
+    "article_person": None,
+    "article_query": None,
+}
+
+
+def object_from_row(klass, row):
+    """
+    Create an object of the given class from the DataFrame row.
+
+    Discards any columns not part of the klass definition.
+
+    TODO: Do we want to dynamically add columns to the database given
+          extra data in the spreadsheet?
+    TODO: Could do this as a dict comprehension
+    """
+    d = {}
+    for key in row.keys():
+        if hasattr(klass, key):
+            d[key] = row[key]
+        else:
+            logger.warn("Discarding %s", key)
+    return klass(**d)
+
+
+TYPE_MAP = {
+    "INTEGER": int,
+    "VARCHAR": str,
+    "BOOLEAN": bool,
+    "DATE": pd.Timestamp.to_pydatetime,
+}
+
+
+def object_from_row_2(klass, row):
+    row_keys = [k for k in row.keys()]
+    # print(row_keys)
+    d = {}
+    for column in klass.__table__.columns:
+        # print(column.name, column.type)
+        # print(type(row_keys), type(column.name), type(column.type))
+        if str(column.type) == "DATE":
+            print(row[column.name], type(row[column.name]))
+        if column.name in row_keys:
+            d[column.name] = TYPE_MAP[str(column.type)](row[column.name])
+    return klass(**d)
+
+
 def import_db_from_xlsx(xlsxname, dbname):
     """
     Rather than use df.to_sql() we need a way to migrate and old database schema
@@ -80,20 +135,27 @@ def import_db_from_xlsx(xlsxname, dbname):
     """
 
     # Get a list of table names
-    # table_names = [Base.metadata.tables.keys()]
+    table_names = [Base.metadata.tables.keys()]
+    print(table_names)
 
     # Construct a dictionary of the current database tables and corresponding
     # classes
+    #
+    # TODO: This only finds tables and classes derived from Base
+    #
     tables_and_classes = {}
     for klass in Base._decl_class_registry.values():
         if hasattr(klass, "__table__"):
-            print(klass.__table__, type(klass.__table__), klass.__table__.name, klass)
+            logger.debug(
+                klass.__table__, type(klass.__table__), klass.__table__.name, klass
+            )
             tables_and_classes[klass.__table__.name] = {"klass": klass}
 
     if os.path.exists(xlsxname):
         for table_name in tables_and_classes.keys():
+            logger.debug(table_name)
             tables_and_classes[table_name]["df"] = pd.read_excel(
-                xlsxname, sheet_name=table_name
+                xlsxname, sheet_name=table_name, dtype=TABLE_TO_DTYPE[table_name]
             )
             # df.to_sql()
 
@@ -105,83 +167,161 @@ def import_db_from_xlsx(xlsxname, dbname):
             adb = ArticleDB(dbname)
             session = adb.session
 
-            print("## QUERY")
+            logger.debug("## QUERY")
             if "query" in tables_and_classes:
                 for index, row in tables_and_classes["query"]["df"].iterrows():
-                    new_query = Query(**dict(row))
+                    if type(row["id"]) != int:
+                        logger.error("query identifier is not int")
+                    new_query = object_from_row_2(Query, row)
                     session.add(new_query)
             adb.commit()
 
-            print("## HIGHLIGHT")
+            logger.debug("## HIGHLIGHT")
             if "highlight" in tables_and_classes:
                 for index, row in tables_and_classes["highlight"]["df"].iterrows():
-                    new_highlight = Highlight(**dict(row))
+                    if type(row["id"]) != int:
+                        logger.error("highlight identifier is not int")
+                    new_highlight = object_from_row_2(Highlight, row)
                     session.add(new_highlight)
             adb.commit()
 
-            # print("## YEAR")
-            # if "year" in tables_and_classes:
-            #     for index, row in tables_and_classes["year"]["df"].iterrows():
-            #         new_year = Year(**dict(row))
-            #         session.add(new_year)
-            # adb.commit()
+            logger.debug("## YEAR")
+            if "year" in tables_and_classes:
+                for index, row in tables_and_classes["year"]["df"].iterrows():
+                    if type(row["id"]) != int:
+                        logger.error("year identifier is not int")
+                    # year_dict = dict(row)
+                    # print(year_dict, type(year_dict["id"]), type(year_dict["year"]))
+                    # year_dict["id"] = int(year_dict["id"])
+                    # year_dict["year"] = int(year_dict["year"])
+                    # new_year = object_from_row(Year, year_dict)
+                    new_year = object_from_row_2(Year, row)
+                    session.add(new_year)
+            adb.commit()
 
-            print("## TITLE")
+            logger.debug("## TITLE")
             if "title" in tables_and_classes:
                 for index, row in tables_and_classes["title"]["df"].iterrows():
-                    new_title = NewspaperTitle(**dict(row))
+                    if type(row["id"]) != int:
+                        logger.error("title identifier is not int")
+                    new_title = object_from_row_2(NewspaperTitle, row)
                     session.add(new_title)
             adb.commit()
 
-            print("## PERSON")
+            logger.debug("## PERSON")
             if "person" in tables_and_classes:
                 for index, row in tables_and_classes["person"]["df"].iterrows():
-                    new_person = Person(**dict(row))
+                    if type(row["id"]) != int:
+                        logger.error("person identifier is not int")
+                    new_person = object_from_row_2(Person, row)
                     session.add(new_person)
             adb.commit()
 
-            print("## NOTE")
+            logger.debug("## NOTE")
             if "note" in tables_and_classes:
                 for index, row in tables_and_classes["note"]["df"].iterrows():
-                    new_note = Note(**dict(row))
+                    if type(row["id"]) != int:
+                        logger.error("note identifier is not int")
+                    new_note = object_from_row_2(Note, row)
                     session.add(new_note)
             adb.commit()
 
-            print("## ARTICLE")
+            logger.debug("## ARTICLE")
             if "article" in tables_and_classes:
                 for index, row in tables_and_classes["article"]["df"].iterrows():
-                    new_article = Article(**dict(row))
+                    if type(row["id"]) != int:
+                        logger.error("article identifier is not int")
+                    new_article = object_from_row_2(Article, row)
                     session.add(new_article)
             adb.commit()
 
+            ### NOW LINK SOME TABLES
+
             # if "article_note" in tables_and_classes:
+            #     print("## ARTICLE_NOTE")
             #     for index, row in tables_and_classes["article_note"]["df"].iterrows():
-            #         new_article_note = Article(**dict(row))
-            #         session.add(new_article_note)
+            #         existing_article = session.query(Article).filter(Article.id == row["article_id"]).one()
+            #         existing_note = session.query(Note).filter(Note.id == row["note_id"]).one()
+            #         existing_article.notes.append(existing_note)
+            # adb.commit()
 
             # if "article_person" in tables_and_classes:
+            #     print("## ARTICLE_PERSON")
             #     for index, row in tables_and_classes["article_person"]["df"].iterrows():
-            #         new_article_person = Article(**dict(row))
-            #         session.add(new_article_person)
+            #         existing_article = session.query(Article).filter(Article.id == row["article_id"]).one()
+            #         print(existing_article.id)
+            #         existing_person = session.query(Person).filter(Person.id == row["person_id"]).one()
+            #         print(existing_person.id)
+            #         existing_article.people.append(existing_person)
+            # adb.commit()
 
-            print("## ARTICLE_QUERY")
-            if "article_query" in tables_and_classes:
-                for index, row in tables_and_classes["article_query"]["df"].iterrows():
-                    existing_article = session.query(Article).filter(Article.id == row["article_id"])
-                    existing_query = session.query(Query).filter(Query.id == row["query_id"])
-                    existing_article.queries.append(existing_query)
+            # if "article_query" in tables_and_classes:
+            #     print("## ARTICLE_QUERY")
+            #     for index, row in tables_and_classes["article_query"]["df"].iterrows():
+            #         existing_article = session.query(Article).filter(Article.id == row["article_id"]).one()
+            #         print(existing_article.id)
+            #         existing_query = session.query(Query).filter(Query.id == row["query_id"]).one()
+            #         existing_article.queries.append(existing_query)
+            # adb.commit()
 
-            # db.add_year(year)
-            # db.add_json_article(json_article=article, query=query)
-            # title
-            # article
+            df = pd.read_excel(
+                xlsxname,
+                sheet_name="article_note",
+                dtype=TABLE_TO_DTYPE["article_note"],
+            )
+            for index, row in df.iterrows():
+                existing_article = (
+                    session.query(Article)
+                    .filter(Article.id == int(row["article_id"]))
+                    .one()
+                )
+                existing_note = (
+                    session.query(Note).filter(Note.id == int(row["note_id"])).one()
+                )
+                existing_article.notes.append(existing_note)
+            adb.commit()
 
+            df = pd.read_excel(
+                xlsxname,
+                sheet_name="article_person",
+                dtype=TABLE_TO_DTYPE["article_person"],
+            )
+            for index, row in df.iterrows():
+                existing_article = (
+                    session.query(Article)
+                    .filter(Article.id == int(row["article_id"]))
+                    .one()
+                )
+                existing_person = (
+                    session.query(Person)
+                    .filter(Person.id == int(row["person_id"]))
+                    .one()
+                )
+                existing_article.people.append(existing_person)
+            adb.commit()
+
+            df = pd.read_excel(
+                xlsxname,
+                sheet_name="article_query",
+                dtype=TABLE_TO_DTYPE["article_query"],
+            )
+            for index, row in df.iterrows():
+                existing_article = (
+                    session.query(Article)
+                    .filter(Article.id == int(row["article_id"]))
+                    .one()
+                )
+                existing_query = (
+                    session.query(Query).filter(Query.id == int(row["query_id"])).one()
+                )
+                existing_article.queries.append(existing_query)
             adb.commit()
 
     else:
         raise FileNotFoundError(xlsxname)
 
     return tables_and_classes
+
 
 def export_db_as_csv(db_name: str = None):
     """

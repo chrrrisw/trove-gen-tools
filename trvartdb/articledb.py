@@ -174,7 +174,7 @@ class ArticleDB(object):
 
     # QUERY METHODS
 
-    def add_query(self, query: str, article: Article=None):
+    def add_query(self, query: str, article: Article = None):
         """
         Add a query to the database.
 
