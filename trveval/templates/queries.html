@@ -8,7 +8,9 @@
 {% block pagecontent %}
 	<div class="ui main container">
 		<div class="ui grid">
-			<div class="three wide column">
+			<div class="four wide column">
+
+				<p>The following years were searched when creating this database.</p>
 
 				<table class="ui selectable celled compact table" id="year_table">
 					<thead>
@@ -30,29 +32,57 @@
 
 			</div>
 
-			<div class="ten wide column">
+			<div class="four wide column">
 
-				<table class="ui selectable celled compact table" id="query_table">
+				<p>The following states were searched when creating this database. If no entries appear, all states were searched.</p>
+
+				<table class="ui selectable celled compact table" id="state_limits">
 					<thead>
 						<tr>
 							<th>ID</th>
-							<th>Query</th>
+							<th>State</th>
 						</tr>
 					</thead>
 					<tbody>
 
 					</tbody>
-					{% for query in queries %}
-						<tr id="{{ query.id }}">
-							<td>{{ query.id }}</td>
-							<td>{{ query.query }}</td>
+					{% for state in states %}
+						<tr id="{{ state.id }}">
+							<td>{{ state.id }}</td>
+							<td>{{ state.state }}</td>
 						</tr>
 					{% endfor %}
 				</table>
 
 			</div>
 
-			<div class="three wide column">
+			<div class="four wide column">
+
+				<p>The following newspaper titles were searched when creating this database. If no entries appear, all titles were searched.</p>
+
+				<table class="ui selectable celled compact table" id="title_limits">
+					<thead>
+						<tr>
+							<th>ID</th>
+							<th>Title</th>
+						</tr>
+					</thead>
+					<tbody>
+
+					</tbody>
+					{% for title in titles %}
+						<tr id="{{ title.id }}">
+							<td>{{ title.id }}</td>
+							<td>{{ title.title }}</td>
+						</tr>
+					{% endfor %}
+				</table>
+
+			</div>
+
+			<div class="four wide column">
+
+				<p>The following highlights will be used when displaying articles on Trove.</p>
 
 				<table class="ui selectable celled compact table" id="highlight_table">
 					<thead>
@@ -75,5 +105,34 @@
 			</div>
 
 		</div>
+
+		<div class="ui grid">
+
+			<div class="sixteen wide column">
+
+				<p>The following queries were included when creating this database.</p>
+
+				<table class="ui selectable celled compact table" id="query_table">
+					<thead>
+						<tr>
+							<th>ID</th>
+							<th>Query</th>
+						</tr>
+					</thead>
+					<tbody>
+
+					</tbody>
+					{% for query in queries %}
+						<tr id="{{ query.id }}">
+							<td>{{ query.id }}</td>
+							<td>{{ query.query }}</td>
+						</tr>
+					{% endfor %}
+				</table>
+
+			</div>
+
+		</div>
+
 	</div>
 {% endblock %}

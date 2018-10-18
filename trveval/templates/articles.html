@@ -7,6 +7,8 @@
 {% endblock %}
 {% block pagecontent %}
 	<div class="ui main container pusher">
+
+		<p>The following articles are contained within this database. They were found by the queries, years and states detailed on the "queries" page. You can modify whether they have been checked and are relevant here. Those articles marked as checked will not be shown again in the "assessment" page.</p>
 		<table class="ui selectable celled compact table">
 			<thead>
 				<tr>
@@ -29,7 +31,7 @@
 					<td><input type="checkbox" class="assessed" name="assessed" {% if article.assessed %}checked{% endif %}></td>
 					<td><input type="checkbox" class="relevant" name="relevant" {% if article.relevant %}checked{% endif %}></td>
 					<td>{{ article.date }}</td>
-					<td>{{ article.category }}</td>
+					<td>{{ article.category_id }}</td>
 					<td>{% for person in article.people %}{{ person.name }}{{ ", " if not loop.last }}{% endfor %}</td>
 					<td>{% for query in article.queries %}{{ query.query }}{{ ", " if not loop.last }}{% endfor %}</td>
 					<td>{{ article.heading }}<i class="ellipsis horizontal icon"></i></td>

@@ -9,6 +9,10 @@ html, body {
 	margin-top: 5em;
 }
 
+.main {
+	margin-top: 5em;
+}
+
 .ui.top.fixed.menu.disconnected {
 	background-color: #dfffdf;
 }

@@ -4,9 +4,37 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from . import Article, Base, Highlight, NewspaperTitle, Person, Query, Year
+from . import (
+    Article,
+    Base,
+    Category,
+    Highlight,
+    NewspaperTitle,
+    Person,
+    Query,
+    Year,
+    StateLimit,
+    TitleLimit,
+)
 
 logger = logging.getLogger(__name__)
+
+
+CATEGORIES = {
+    "Article": 1,
+    "Advertising": 2,
+    "Detailed lists, results, guides": 3,
+    "Family Notices": 4,
+    "Literature": 5,
+    "Government Gazette Notices": 6,
+    "Government Gazette Tenders and Contracts": 7,
+    "Government Gazette Proclamations And Legislation": 8,
+    "Government Gazette Private Notices": 9,
+    "Government Gazette Budgetary Papers": 10,
+    "Government Gazette Index And Contents": 11,
+    "Government Gazette Appointments And Employment": 12,
+    "Government Gazette Freedom Of Information": 13,
+}
 
 
 class ArticleDB(object):
@@ -25,6 +53,11 @@ class ArticleDB(object):
         Base.metadata.create_all(self.engine)
         DBSession = sessionmaker(bind=self.engine)
         self._session = DBSession()
+
+        for key, value in CATEGORIES.items():
+            new_category = Category(id=value, category=key)
+            self._session.add(new_category)
+        self._session.commit()
 
     def bind_db(self):
         logger.info("Binding DB")
@@ -76,6 +109,7 @@ class ArticleDB(object):
             new_article = Article(
                 id=json_article["id"],
                 title_id=json_article["title"]["id"],
+                category_id=CATEGORIES[json_article["category"]],
                 page=json_article["page"],
                 assessed=False,
                 relevant=False,
@@ -86,7 +120,6 @@ class ArticleDB(object):
                 date=datetime.datetime.strptime(
                     json_article["date"], "%Y-%m-%d"
                 ).date(),
-                category=json_article["category"],
                 heading=json_article.get("heading", ""),
             )
             self._session.add(new_article)
@@ -230,7 +263,7 @@ class ArticleDB(object):
 
     # YEAR METHODS
 
-    def add_year(self, year):
+    def add_year(self, year: int) -> None:
         """
         Add a year to the database.
 
@@ -240,5 +273,51 @@ class ArticleDB(object):
         if year_query is None:
             self._session.add(Year(year=year))
 
-    def all_years(self):
+    def all_years(self) -> list:
         return [y.year for y in self._session.query(Year)]
+
+    # STATE LIMIT METHODS
+
+    def add_state_limit(self, state: str) -> None:
+        """
+        Add a state limit to the database.
+
+        State Limits are passed to Trove in the initial collection phase.
+        """
+        existing_state = (
+            self._session.query(StateLimit)
+            .filter(StateLimit.state == state)
+            .one_or_none()
+        )
+        if existing_state is None:
+            self._session.add(StateLimit(state=state))
+
+    def all_state_limits(self) -> list:
+        """Returns a list of strings, representing the state limits"""
+
+        # return [y.year for y in self._session.query(Year)]
+        existing_states = [s.state for s in self._session.query(StateLimit)]
+        return existing_states
+
+    # TITLE LIMIT METHODS
+
+    def add_title_limit(self, title: int) -> None:
+        """
+        Add a title limit to the database.
+
+        Title Limits are passed to Trove in the initial collection phase.
+        """
+        existing_title = (
+            self._session.query(TitleLimit)
+            .filter(TitleLimit.title == title)
+            .one_or_none()
+        )
+        if existing_title is None:
+            self._session.add(TitleLimit(title=title))
+
+    def all_title_limits(self) -> list:
+        """Returns a list of integers, representing the title limits."""
+
+        # return [y.year for y in self._session.query(Year)]
+        existing_titles = [t.title for t in self._session.query(TitleLimit)]
+        return existing_titles

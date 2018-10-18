@@ -5,7 +5,7 @@ import weakref
 from aiohttp import web, WSMsgType, WSCloseCode
 from jinja2 import Environment, PackageLoader, select_autoescape
 
-from trvartdb import Article, Query, Highlight, Year
+from trvartdb import Article, Query, Highlight, Year, StateLimit, TitleLimit
 from trvartdb.articledb import ArticleDB
 
 
@@ -102,7 +102,13 @@ async def handle_post(request):
         try:
             request.app["current_article"] = request.app["iterator"].__next__()
         except StopIteration as e:
-            return web.Response(text="Finished!")
+            # return web.Response(text="Finished!")
+            return web.Response(
+                body=request.app["finished_template"].render(
+                    page_title="Finished assessment"
+                ),
+                content_type="text/html",
+            )
 
     print("POST now showing", request.app["current_article"].id)
     return web.Response(
@@ -117,7 +123,13 @@ async def handle_post(request):
 
 async def handle_assessment(request):
     if request.app["current_article"] is None:
-        return web.Response(text="Finished!")
+        # return web.Response(text="Finished!")
+        return web.Response(
+            body=request.app["finished_template"].render(
+                page_title="Finished assessment"
+            ),
+            content_type="text/html",
+        )
     else:
         print("GET Showing", request.url, request.app["current_article"].id)
         return web.Response(
@@ -164,6 +176,8 @@ async def handle_queries(request):
             queries=request.app["database"].session.query(Query),
             highlights=request.app["database"].session.query(Highlight),
             years=request.app["database"].session.query(Year),
+            states=request.app["database"].session.query(StateLimit),
+            titles=request.app["database"].session.query(TitleLimit),
         ),
         content_type="text/html",
     )
@@ -205,6 +219,7 @@ async def on_startup(app):
     app["articles_template"] = env.get_template("articles.html")
     app["people_template"] = env.get_template("people.html")
     app["queries_template"] = env.get_template("queries.html")
+    app["finished_template"] = env.get_template("finished.html")
 
 
 async def on_cleanup(app):
@@ -226,6 +241,9 @@ def main():
     parser = argparse.ArgumentParser(
         prog="trveval",
         description="Evaluate articles for relevance, updating the database as you go.",
+        epilog="""Highlights are used to highlight terms in the Trove page. The file
+        should contain "+" separated terms. The year can be of the form YYYY-MM-DD,
+        with both days and months optional.""",
     )
     parser.add_argument(dest="database", help="The database to use.")
     parser.add_argument(
