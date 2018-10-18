@@ -1,0 +1,21 @@
+@media only screen and (max-width: 1199px) and (min-width: 992px)
+.ui.main.container {
+    width: 933px;
+    margin-left: auto!important;
+    margin-right: auto!important;
+}
+
+@media only screen and (max-width: 1699px) and (min-width: 1200px)
+.ui.main.container {
+    width: 1127px;
+    margin-left: auto!important;
+    margin-right: auto!important;
+}
+
+@media only screen and (min-width: 1700px)
+.ui.main.container {
+    width: 1613px;
+    margin-left: auto!important;
+    margin-right: auto!important;
+}
+

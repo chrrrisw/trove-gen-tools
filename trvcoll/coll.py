@@ -1,5 +1,8 @@
 import json
+import logging
 import requests
+
+from trvartdb.articledb import ArticleDB
 
 BASE_URL = "https://api.trove.nla.gov.au/v2/result"
 
@@ -7,12 +10,14 @@ BULK_HARVEST = "true"
 ZONE = "newspaper"
 ENCODING = "json"
 
+logger = logging.getLogger(__name__)
+
 
 def query_trove(payload):
     try:
         response = requests.get(BASE_URL, params=payload)
     except requests.exceptions.ProxyError as err:
-        print(err)
+        logger.exception("Error connecting to Trove.")
         return {}
     else:
         json_response = json.loads(response.text)
@@ -36,7 +41,15 @@ STATES = {
 }
 
 
-def collect_articles(apikey, db, queries, year_start, year_end, state, title):
+def collect_articles(
+    apikey: str,
+    db: ArticleDB,
+    queries: str,
+    year_start: int,
+    year_end: int,
+    states: list,
+    titles: list,
+):
     payload = {
         "key": apikey,
         "bulkHarvest": BULK_HARVEST,
@@ -65,14 +78,49 @@ def collect_articles(apikey, db, queries, year_start, year_end, state, title):
             db.add_year(year)
         db.commit()
 
-    if state is not None:
-        if state in STATES.keys():
-            payload["l-state"] = STATES[state]
-        else:
-            print("State must be one of", list(STATES.keys()))
+    if states is not None:
+        for state in states:
+            if state in STATES.keys():
+                db.add_state_limit(STATES[state])
+                # payload["l-state"] = STATES[state]
+            else:
+                print("State must be one of", list(STATES.keys()))
+        db.commit()
 
-    if title is not None:
-        payload["l-title"] = title
+    if titles is not None:
+        for title in titles:
+            db.add_title_limit(title)
+        db.commit()
+
+    def _do_query():
+        print(
+            "Processing",
+            payload["q"],
+            payload["l-year"],
+            payload.get("l-state"),
+            payload.get("l-title"),
+        )
+
+        # Set start
+        payload["s"] = "*"
+
+        records = query_trove(payload)
+
+        if "article" in records:
+            articles = records["article"]
+            for article in articles:
+                # print(a["title"]["id"])
+                db.add_json_article(json_article=article, query=query)
+
+        # This could be done by recursion, but I worry about depth
+        while "nextStart" in records:
+            payload["s"] = records["nextStart"]
+            # print("nextStart", records["nextStart"])
+            records = query_trove(payload)
+            if "article" in records:
+                articles = records["article"]
+                for article in articles:
+                    db.add_json_article(json_article=article, query=query)
 
     for query in db.all_queries():
 
@@ -80,31 +128,36 @@ def collect_articles(apikey, db, queries, year_start, year_end, state, title):
         payload["q"] = query.query
 
         for year in db.all_years():
-            print("Processing", payload["q"], year)
 
-            # New year, set s, decade and year
-            payload["s"] = "*"
+            # New year, set decade and year
             decade = year // 10
             payload["l-decade"] = decade
             payload["l-year"] = year
 
-            records = query_trove(payload)
+            all_states = db.all_state_limits()
+            all_titles = db.all_title_limits()
 
-            if "article" in records:
-                articles = records["article"]
-                for article in articles:
-                    # print(a["title"]["id"])
-                    db.add_json_article(json_article=article, query=query)
+            if all_states == []:
 
-            # This could be done by recursion, but I worry about depth
-            while "nextStart" in records:
-                payload["s"] = records["nextStart"]
-                # print("nextStart", records["nextStart"])
-                records = query_trove(payload)
-                if "article" in records:
-                    articles = records["article"]
-                    for article in articles:
-                        db.add_json_article(json_article=article, query=query)
+                if all_titles == []:
+                    _do_query()
+                else:
+                    for title in all_titles:
+                        payload["l-title"] = title
+                        _do_query()
+
+            else:
+                for state in all_states:
+                    payload["l-state"] = state
+
+                    if all_titles == []:
+                        _do_query()
+                    else:
+                        for title in all_titles:
+                            payload["l-title"] = title
+                            _do_query()
+
+                db.commit()
 
         db.commit()
 

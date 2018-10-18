@@ -18,7 +18,15 @@ class NewspaperTitle(Base):
     articles = relationship("Article")  # One to many, title is parent
 
 
+class Category(Base):
+    __tablename__ = "category"
+    id = Column(Integer, primary_key=True)
+    category = Column(String(50))
+    articles = relationship("Article")  # One to many, category is parent
+
+
 # Two-way association between Article and Person
+# Articles can have many Persons and Persons can have many Articles
 article_person = Table(
     "article_person",
     Base.metadata,
@@ -60,6 +68,7 @@ class Article(Base):
     __tablename__ = "article"
     id = Column(Integer, primary_key=True)
     title_id = Column(Integer, ForeignKey("title.id"))
+    category_id = Column(Integer, ForeignKey("category.id"))
     people = relationship("Person", secondary=article_person, back_populates="articles")
     queries = relationship("Query", secondary=article_query, back_populates="articles")
     notes = relationship("Note", secondary=article_note, back_populates="articles")
@@ -71,7 +80,6 @@ class Article(Base):
     wordCount = Column(Integer)
     # date = Column(String(10))
     date = Column(Date)
-    category = Column(String)
     heading = Column(String)
 
 
@@ -101,3 +109,15 @@ class Note(Base):
     id = Column(Integer, primary_key=True)
     articles = relationship("Article", secondary=article_note, back_populates="notes")
     note = Column(String)
+
+
+class StateLimit(Base):
+    __tablename__ = "state_limits"
+    id = Column(Integer, primary_key=True)
+    state = Column(String(20))
+
+
+class TitleLimit(Base):
+    __tablename__ = "title_limits"
+    id = Column(Integer, primary_key=True)
+    title = Column(Integer)

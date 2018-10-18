@@ -38,6 +38,7 @@ setup(
     install_requires=[
         "aiohttp",
         "jinja2",
+        "numpy",
         "pandas",
         "requests",
         "sqlalchemy",
@@ -49,8 +50,10 @@ setup(
         "console_scripts": [
             "trveval=trveval.__main__:main",
             "trvcoll=trvcoll.__main__:main",
-            "trv2xl=trvartdb.articlecsv:export_db_as_xlsx",
-            "trv2csv=trvartdb.articlecsv:export_db_as_csv",
+            "trv2xl=trvartdb.exporters:export_db_as_xlsx",
+            "xl2trv=trvartdb.importers:import_db_from_xlsx",
+            "trv2csv=trvartdb.exporters:export_db_as_csv",
+            "csv2trv=trvartdb.importers:import_db_from_csv",
         ],
         "gui_scripts": [],
     },
