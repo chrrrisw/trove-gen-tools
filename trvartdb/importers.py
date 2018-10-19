@@ -501,7 +501,9 @@ def import_db_from_csv(csv_base: str = None, db_name: str = None):
                         .one()
                     )
                     existing_query = (
-                        session.query(Query).filter(Query.id == int(row["query_id"])).one()
+                        session.query(Query)
+                        .filter(Query.id == int(row["query_id"]))
+                        .one()
                     )
                     existing_article.queries.append(existing_query)
 
