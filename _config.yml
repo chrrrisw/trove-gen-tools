@@ -1,1 +1,5 @@
 theme: jekyll-theme-cayman
+title: trove-gen-tools
+description: Some tools to help with searching NLA Trove newspapers for genealogy purposes.
+show_downloads: "true"
+google_analytics: UA-68763720-1
