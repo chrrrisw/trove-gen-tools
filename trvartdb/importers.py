@@ -1,3 +1,5 @@
+import csv
+import datetime
 import logging
 import numpy as np
 import os
@@ -6,7 +8,7 @@ import pandas as pd
 from . import (
     Article,
     Base,
-    Category,
+    # Category,
     Highlight,
     NewspaperTitle,
     Note,
@@ -71,7 +73,7 @@ def object_from_row_old(klass, row):
     return klass(**d)
 
 
-TYPE_MAP = {
+XL_TYPE_MAP = {
     "INTEGER": int,
     "VARCHAR": str,
     "VARCHAR(20)": str,
@@ -81,19 +83,30 @@ TYPE_MAP = {
 }
 
 
-def object_from_row_new(klass, row):
-    if klass == Person:
-        print(row)
+def str_to_datetime(value):
+    return datetime.datetime.strptime(value, "%Y-%m-%d")
+
+
+def str_to_bool(value):
+    return value == "1"
+
+
+CSV_TYPE_MAP = {
+    "INTEGER": int,
+    "VARCHAR": str,
+    "VARCHAR(20)": str,
+    "VARCHAR(50)": str,
+    "BOOLEAN": str_to_bool,
+    "DATE": str_to_datetime,
+}
+
+
+def object_from_row_new(klass, row, type_map):
     row_keys = [k for k in row.keys()]
-    # print(row_keys)
     d = {}
     for column in klass.__table__.columns:
-        # print(column.name, column.type)
-        # print(type(row_keys), type(column.name), type(column.type))
-        # if str(column.type) == "DATE":
-        #     print(row[column.name], type(row[column.name]))
         if column.name in row_keys:
-            d[column.name] = TYPE_MAP[str(column.type)](row[column.name])
+            d[column.name] = type_map[str(column.type)](row[column.name])
     return klass(**d)
 
 
@@ -104,18 +117,25 @@ def import_db_from_xlsx(xlsx_name: str = None, db_name: str = None):
     """
 
     # Get a list of table names
-    table_names = [Base.metadata.tables.keys()]
-    print(table_names)
+    # table_names = [Base.metadata.tables.keys()]
+    # print(table_names)
 
     if (db_name is None) or (xlsx_name is None):
-        import sys
+        import argparse
 
-        if (len(sys.argv) != 3) or ("-h" in sys.argv):
-            print(f"Usage: {sys.argv[0]} <xlsx_filename> <database_filename>")
-            exit(-1)
-
-        xlsx_name = sys.argv[1]
-        db_name = sys.argv[2]
+        parser = argparse.ArgumentParser(
+            description="Import a Trove newspaper article database from an xlsx file.",
+            epilog="This will not overwrite an existing database file if it exists.",
+        )
+        parser.add_argument(
+            "xlsx_name", type=str, help="The filename of the xlsx file to read."
+        )
+        parser.add_argument(
+            "db_name", type=str, help="The filename of the article database to produce."
+        )
+        args = parser.parse_args()
+        xlsx_name = args.xlsx_name
+        db_name = args.db_name
 
     # Construct a dictionary of the current database tables and corresponding
     # classes
@@ -155,7 +175,7 @@ def import_db_from_xlsx(xlsx_name: str = None, db_name: str = None):
                 for index, row in tables_and_classes["query"]["df"].iterrows():
                     if type(row["id"]) != int:
                         logger.error("query identifier is not int")
-                    new_query = object_from_row_new(Query, row)
+                    new_query = object_from_row_new(Query, row, XL_TYPE_MAP)
                     session.add(new_query)
             adb.commit()
 
@@ -166,7 +186,7 @@ def import_db_from_xlsx(xlsx_name: str = None, db_name: str = None):
                 for index, row in tables_and_classes["highlight"]["df"].iterrows():
                     if type(row["id"]) != int:
                         logger.error("highlight identifier is not int")
-                    new_highlight = object_from_row_new(Highlight, row)
+                    new_highlight = object_from_row_new(Highlight, row, XL_TYPE_MAP)
                     session.add(new_highlight)
             adb.commit()
 
@@ -180,7 +200,7 @@ def import_db_from_xlsx(xlsx_name: str = None, db_name: str = None):
                     # year_dict["id"] = int(year_dict["id"])
                     # year_dict["year"] = int(year_dict["year"])
                     # new_year = object_from_row(Year, year_dict)
-                    new_year = object_from_row_new(Year, row)
+                    new_year = object_from_row_new(Year, row, XL_TYPE_MAP)
                     session.add(new_year)
             adb.commit()
 
@@ -191,7 +211,7 @@ def import_db_from_xlsx(xlsx_name: str = None, db_name: str = None):
                 for index, row in tables_and_classes["title"]["df"].iterrows():
                     if type(row["id"]) != int:
                         logger.error("title identifier is not int")
-                    new_title = object_from_row_new(NewspaperTitle, row)
+                    new_title = object_from_row_new(NewspaperTitle, row, XL_TYPE_MAP)
                     session.add(new_title)
             adb.commit()
 
@@ -204,7 +224,7 @@ def import_db_from_xlsx(xlsx_name: str = None, db_name: str = None):
             #     for index, row in tables_and_classes["category"]["df"].iterrows():
             #         if type(row["id"]) != int:
             #             logger.error("category identifier is not int")
-            #         new_category = object_from_row_new(Category, row)
+            #         new_category = object_from_row_new(Category, row, XL_TYPE_MAP)
             #         session.add(new_category)
             # adb.commit()
 
@@ -215,7 +235,7 @@ def import_db_from_xlsx(xlsx_name: str = None, db_name: str = None):
                 for index, row in tables_and_classes["person"]["df"].iterrows():
                     if type(row["id"]) != int:
                         logger.error("person identifier is not int")
-                    new_person = object_from_row_new(Person, row)
+                    new_person = object_from_row_new(Person, row, XL_TYPE_MAP)
                     session.add(new_person)
             adb.commit()
 
@@ -224,7 +244,7 @@ def import_db_from_xlsx(xlsx_name: str = None, db_name: str = None):
                 for index, row in tables_and_classes["note"]["df"].iterrows():
                     if type(row["id"]) != int:
                         logger.error("note identifier is not int")
-                    new_note = object_from_row_new(Note, row)
+                    new_note = object_from_row_new(Note, row, XL_TYPE_MAP)
                     session.add(new_note)
             adb.commit()
 
@@ -235,7 +255,7 @@ def import_db_from_xlsx(xlsx_name: str = None, db_name: str = None):
                 for index, row in tables_and_classes["article"]["df"].iterrows():
                     if type(row["id"]) != int:
                         logger.error("article identifier is not int")
-                    new_article = object_from_row_new(Article, row)
+                    new_article = object_from_row_new(Article, row, XL_TYPE_MAP)
                     session.add(new_article)
             adb.commit()
 
@@ -246,7 +266,7 @@ def import_db_from_xlsx(xlsx_name: str = None, db_name: str = None):
                 for index, row in tables_and_classes["state_limits"]["df"].iterrows():
                     if type(row["id"]) != int:
                         logger.error("state_limits identifier is not int")
-                    new_state_limit = object_from_row_new(StateLimit, row)
+                    new_state_limit = object_from_row_new(StateLimit, row, XL_TYPE_MAP)
                     session.add(new_state_limit)
             adb.commit()
 
@@ -257,7 +277,7 @@ def import_db_from_xlsx(xlsx_name: str = None, db_name: str = None):
                 for index, row in tables_and_classes["title_limits"]["df"].iterrows():
                     if type(row["id"]) != int:
                         logger.error("title_limits identifier is not int")
-                    new_title_limit = object_from_row_new(TitleLimit, row)
+                    new_title_limit = object_from_row_new(TitleLimit, row, XL_TYPE_MAP)
                     session.add(new_title_limit)
             adb.commit()
 
@@ -352,5 +372,142 @@ def import_db_from_xlsx(xlsx_name: str = None, db_name: str = None):
     # return tables_and_classes
 
 
-def import_db_from_csv(csv_name, db_name):
-    pass
+def import_db_from_csv(csv_base: str = None, db_name: str = None):
+    print("import_db_from_csv")
+    if (db_name is None) or (csv_base is None):
+        import argparse
+
+        parser = argparse.ArgumentParser(
+            description="Import a Trove newspaper article database from a group of CSV files.",
+            epilog="This will not overwrite an existing database file if it exists.",
+        )
+        parser.add_argument(
+            "csv_base", type=str, help="The start of each CSV filename to read."
+        )
+        parser.add_argument(
+            "db_name", type=str, help="The filename of the article database to produce."
+        )
+        args = parser.parse_args()
+        csv_base = args.csv_base
+        db_name = args.db_name
+
+    print(csv_base, db_name)
+
+    # Construct a dictionary of the current database tables and corresponding
+    # classes
+    #
+    # TODO: This only finds tables and classes derived from Base
+    #
+    tables_and_classes = {}
+    for klass in Base._decl_class_registry.values():
+        if hasattr(klass, "__table__"):
+            logger.debug(
+                klass.__table__, type(klass.__table__), klass.__table__.name, klass
+            )
+            tables_and_classes[klass.__table__.name] = {"klass": klass}
+
+    if not os.path.exists(db_name):
+
+        adb = ArticleDB(db_name)
+        session = adb.session
+
+        # Get a list of table names
+        table_names = Base.metadata.tables.keys()
+        skip_tables = ["category", "article_note", "article_person", "article_query"]
+
+        for table_name in table_names:
+            if table_name in skip_tables:
+                continue
+
+            print("Processing:", table_name)
+            csv_name = f"{csv_base}_{table_name}.csv"
+            if os.path.exists(csv_name):
+                print("\tHave:", csv_name)
+
+                with open(csv_name, "r", newline="") as csv_file:
+                    reader = csv.DictReader(csv_file)
+                    for row in reader:
+                        # print(row)
+                        new_object = object_from_row_new(
+                            klass=tables_and_classes[table_name]["klass"],
+                            row=row,
+                            type_map=CSV_TYPE_MAP,
+                        )
+                        session.add(new_object)
+                    adb.commit()
+
+            else:
+                print("\tMissing:", csv_name)
+
+        # article_note
+        table_name = "article_note"
+        print("Processing:", table_name)
+        csv_name = f"{csv_base}_{table_name}.csv"
+        if os.path.exists(csv_name):
+            print("\tHave:", csv_name)
+            with open(csv_name, "r", newline="") as csv_file:
+                reader = csv.DictReader(csv_file)
+                for row in reader:
+                    existing_article = (
+                        session.query(Article)
+                        .filter(Article.id == int(row["article_id"]))
+                        .one()
+                    )
+                    existing_note = (
+                        session.query(Note).filter(Note.id == int(row["note_id"])).one()
+                    )
+                    existing_article.notes.append(existing_note)
+                adb.commit()
+        else:
+            print("\tMissing:", csv_name)
+
+        # article_person
+        table_name = "article_person"
+        print("Processing:", table_name)
+        csv_name = f"{csv_base}_{table_name}.csv"
+        if os.path.exists(csv_name):
+            print("\tHave:", csv_name)
+            with open(csv_name, "r", newline="") as csv_file:
+                reader = csv.DictReader(csv_file)
+                for row in reader:
+                    existing_article = (
+                        session.query(Article)
+                        .filter(Article.id == int(row["article_id"]))
+                        .one()
+                    )
+                    existing_person = (
+                        session.query(Person)
+                        .filter(Person.id == int(row["person_id"]))
+                        .one()
+                    )
+                    existing_article.people.append(existing_person)
+
+                adb.commit()
+        else:
+            print("\tMissing:", csv_name)
+
+        # article_query
+        table_name = "article_query"
+        print("Processing:", table_name)
+        csv_name = f"{csv_base}_{table_name}.csv"
+        if os.path.exists(csv_name):
+            print("\tHave:", csv_name)
+            with open(csv_name, "r", newline="") as csv_file:
+                reader = csv.DictReader(csv_file)
+                for row in reader:
+                    existing_article = (
+                        session.query(Article)
+                        .filter(Article.id == int(row["article_id"]))
+                        .one()
+                    )
+                    existing_query = (
+                        session.query(Query).filter(Query.id == int(row["query_id"])).one()
+                    )
+                    existing_article.queries.append(existing_query)
+
+                adb.commit()
+        else:
+            print("\tMissing:", csv_name)
+
+    else:
+        logger.error("Database exists")

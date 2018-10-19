@@ -4,6 +4,7 @@
 	<meta charset="UTF-8">
 	<title>{{ page_title }}</title>
 	<link rel="stylesheet" type="text/css" href="static/common.css">
+	<link rel="icon" href="static/gen_logo.png">
 	{% block styleinclude %}
 	{% endblock %}
 	<script type="text/javascript" src="static/comms.js"></script>
@@ -26,7 +27,7 @@
 <body>
 	<div class="ui top fixed menu">
 		<div class="ui container">
-			<div class="header item">{{ page_title }}</div>
+			<div class="header item"><img class="ui avatar image" src="/static/gen_logo.png">{{ page_title }}</div>
 			<div class="right icon menu">
 				<a class="item" href="/collector.html"><i class="search icon"></i>Collector</a>
 				<a class="item" href="/assessment.html"><i class="check square outline icon"></i>Assessment</a>

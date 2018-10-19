@@ -22,9 +22,9 @@ window.onload = function() {
 
 	// Initialise sidebar
 	// TODO Make delegated event.
-	$(".ui.bottom.sidebar")
-		.sidebar('setting', 'transition', 'overlay')
-		.sidebar('attach events', '.ellipsis.horizontal.icon')
-	;
+	// $(".ui.bottom.sidebar")
+	// 	.sidebar('setting', 'transition', 'overlay')
+	// 	.sidebar('attach events', '.ellipsis.horizontal.icon')
+	// ;
 
 }

@@ -4,20 +4,39 @@
 
 - [ ] Packaging (including console scripts)
 - [ ] Deployment to PyPi
-- [ ] CSV import/export
 - [ ] Command line help
 - [ ] Web help
+- [x] Icon
 
 ### Assessment
 
 - [x] Allow assessment based on date
-- [ ] Finished message
+- [x] Finished message
+
+### Articles
+
+- [x] Off-site article link
+
+### Export tools
+
+- [x] CSV export
+
+### Import tools
+
+- [x] CSV import
+
+
 
 ## Version 0.1.4
 
-- [ ] Icon
-- [ ] Websocket connection status on all pages.
+- [ ] Websocket connection status on all pages (include tooltip).
 - [ ] Reconnection for websocket
+- [ ] GitHub pages
+
+### Collector
+
+- [ ] Add whether you have corrected the article
+- [ ] Web interface for collector
 
 ### Assessment
 
@@ -25,10 +44,11 @@
 - [ ] Allow single article assessment
 - [ ] Previously associated people are not shown on the assessment page
 
-### Collector
+### Articles
 
-- [ ] Add whether you have corrected the article
-- [ ] Web interface for collector
+- [ ] Re-evaluation (undo)
+- [ ] Modify people
+- [ ] Notes for articles
 
 ### People
 
@@ -36,9 +56,24 @@
   - [ ] Add person
   - [ ] Delete person
 
+### Queries
+
+- [ ] Add/delete/modify states in page
+
+### Export tools
+
+- [ ] Export only relevant
+
+### Import tools
+
+- [ ] Import person from XLSX converts "" to NaN
+
 ### Merge tool
 
 - [ ] Merge tool for relevant articles
+
+
+
 
 ## Later versions
 
@@ -52,39 +87,11 @@
 - [ ] Semantic theme for wider screens
 - [ ] Allow deletion of associated people (assessment and article page)
 
-
-
-
-
-
-
-
-
-
-
 ### Articles
 
-- [ ] Re-evaluation (undo)
 - [ ] Web interface for DB modification
-- [ ] Modify people
-- [ ] Notes for articles
-- [ ] Off-site article link
 - [ ] Full details sidebar
 
-### Queries
-
-- [ ] Show states in page
-- [ ] Add/delete/modify tables in page
-
-### Export tools
-
-- [ ] Export only relevant
-- [ ] CSV export
-- [ ] CSV import
-
-### Import tools
-
-- [ ] Import person from XLSX converts "" to NaN
 
 ## Web App
 

@@ -27,14 +27,14 @@
 			</tbody>
 			{% for article in articles %}
 				<tr class="article" id="{{ article.id }}">
-					<td>{{ article.id }} <i class="external alternate icon"></i></td>
+					<td><a href="http://nla.gov.au/nla.news-article{{ article.id }}" target="trove">{{ article.id }}</a></td>
 					<td><input type="checkbox" class="assessed" name="assessed" {% if article.assessed %}checked{% endif %}></td>
 					<td><input type="checkbox" class="relevant" name="relevant" {% if article.relevant %}checked{% endif %}></td>
 					<td>{{ article.date }}</td>
 					<td>{{ article.category_id }}</td>
 					<td>{% for person in article.people %}{{ person.name }}{{ ", " if not loop.last }}{% endfor %}</td>
 					<td>{% for query in article.queries %}{{ query.query }}{{ ", " if not loop.last }}{% endfor %}</td>
-					<td>{{ article.heading }}<i class="ellipsis horizontal icon"></i></td>
+					<td>{{ article.heading }}</td>
 				</tr>
 			{% endfor %}
 		</table>

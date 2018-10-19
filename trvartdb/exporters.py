@@ -28,7 +28,7 @@ def export_db_as_xlsx(db_name: str = None, xlsx_name: str = None):
             epilog="This will overwrite an existing xlsx file if it exists.",
         )
         parser.add_argument(
-            "db_name", type=str, help="The filename of the article database"
+            "db_name", type=str, help="The filename of the article database."
         )
         parser.add_argument(
             "xlsx_name", type=str, help="The filename of the xlsx file to produce."
@@ -80,10 +80,10 @@ def export_db_as_csv(db_name: str = None, csv_base: str = None):
             which assumes one table per file.""",
         )
         parser.add_argument(
-            "db_name", type=str, help="The filename of the article database"
+            "db_name", type=str, help="The filename of the article database."
         )
         parser.add_argument(
-            "csv_base", type=str, help="The start of the each CSV filename"
+            "csv_base", type=str, help="The start of each CSV filename."
         )
         args = parser.parse_args()
         db_name = args.db_name
