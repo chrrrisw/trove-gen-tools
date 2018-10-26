@@ -16,6 +16,7 @@
 ### Articles
 
 - [x] Off-site article link
+- [ ] Remove sidebar stuff
 
 ### Export tools
 

@@ -364,7 +364,7 @@ def import_db_from_xlsx(xlsx_name: str = None, db_name: str = None):
             adb.commit()
 
         else:
-            logger.error("Database exists")
+            logger.error("Database exists - please specify a different file name.")
 
     else:
         raise FileNotFoundError(xlsx_name)
@@ -512,4 +512,4 @@ def import_db_from_csv(csv_base: str = None, db_name: str = None):
             print("\tMissing:", csv_name)
 
     else:
-        logger.error("Database exists")
+        logger.error("Database exists - please specify a different file name.")
